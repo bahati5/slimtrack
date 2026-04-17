@@ -15,6 +15,7 @@ import {
   subMonths,
   addMonths,
 } from "date-fns";
+import { fr } from "date-fns/locale";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -39,18 +40,21 @@ export function MonthCalendar({
   serverToday: string;
 }) {
   const supabase = useMemo(() => createClient(), []);
-  const selectedDate = parseISO(date);
-  const todayDate = parseISO(serverToday);
+  const selectedDate = useMemo(() => parseISO(date), [date]);
+  const todayDate = useMemo(() => parseISO(serverToday), [serverToday]);
 
   const [currentMonth, setCurrentMonth] = useState(() =>
-    startOfMonth(selectedDate),
+    startOfMonth(parseISO(date)),
   );
 
   useEffect(() => {
-    if (!isSameMonth(selectedDate, currentMonth)) {
-      setCurrentMonth(startOfMonth(selectedDate));
-    }
-  }, [selectedDate, currentMonth]);
+    setCurrentMonth((prev) => {
+      if (!isSameMonth(selectedDate, prev)) {
+        return startOfMonth(selectedDate);
+      }
+      return prev;
+    });
+  }, [selectedDate]);
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
@@ -92,10 +96,7 @@ export function MonthCalendar({
           <ChevronLeft className="size-5" />
         </button>
         <p className="text-sm font-semibold capitalize">
-          {new Intl.DateTimeFormat("fr-FR", {
-            month: "long",
-            year: "numeric",
-          }).format(monthStart)}
+          {format(monthStart, "MMMM yyyy", { locale: fr })}
         </p>
         <button
           type="button"
@@ -141,11 +142,7 @@ export function MonthCalendar({
                   : "border-transparent hover:bg-[var(--color-card-soft)]/70",
                 !inMonth && "opacity-45",
               )}
-              aria-label={`Voir le ${new Intl.DateTimeFormat("fr-FR", {
-                day: "numeric",
-                month: "long",
-                year: "numeric",
-              }).format(day)}`}
+              aria-label={`Voir le ${format(day, "d MMMM yyyy", { locale: fr })}`}
             >
               <span className="text-xs font-medium">{format(day, "d")}</span>
               <span

@@ -51,10 +51,16 @@ serve(async (req: Request) => {
     .select("endpoint, p256dh, auth")
     .eq("user_id", userId);
 
+  const logDate = payload?.record?.log_date;
+  const linkUrl =
+    logDate && logDate.length >= 10
+      ? `/today?date=${encodeURIComponent(logDate.slice(0, 10))}`
+      : "/today";
+
   const body = JSON.stringify({
     title: "Ta coach a laissé un commentaire",
     body: comment.slice(0, 140),
-    url: "/today",
+    url: linkUrl,
   });
 
   await Promise.allSettled(
@@ -71,6 +77,7 @@ serve(async (req: Request) => {
     type: "coach_comment",
     title: "Ta coach a laissé un commentaire",
     body: comment.slice(0, 140),
+    link_url: linkUrl,
   });
 
   return new Response(JSON.stringify({ ok: true }), {

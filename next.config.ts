@@ -11,6 +11,8 @@ const withSerwist = withSerwistInit({
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  /** Réduit les conflits DOM entre l’UI de dev Next et React en développement. */
+  devIndicators: false,
   // Évite le warning "inferred workspace root" quand le lockfile parent de l'utilisateur
   // existe (cas d'un `pnpm-lock.yaml` dans le home).
   outputFileTracingRoot: __dirname,

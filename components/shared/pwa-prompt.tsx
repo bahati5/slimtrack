@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Download, Bell, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { usePushSubscription } from "@/lib/hooks/use-push-subscription";
+import { usePushSubscription, subscribeForPush } from "@/lib/hooks/use-push-subscription";
 
 type Step = "install" | "notify" | null;
 
@@ -83,10 +83,8 @@ export function PwaPrompt() {
       return;
     }
     const result = await Notification.requestPermission();
-    if (result === "granted" && "serviceWorker" in navigator) {
-      const { usePushSubscription: _, ...mod } = await import("@/lib/hooks/use-push-subscription");
-      void mod;
-      // Le hook usePushSubscription se re-déclenche au prochain rendu
+    if (result === "granted") {
+      await subscribeForPush();
     }
     dismiss();
   }

@@ -12,32 +12,32 @@ function urlBase64ToUint8Array(base64String: string) {
   return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)));
 }
 
+export async function subscribeForPush() {
+  if (
+    typeof window === "undefined" ||
+    !("serviceWorker" in navigator) ||
+    !("PushManager" in window) ||
+    Notification.permission !== "granted"
+  )
+    return;
+
+  const reg = await navigator.serviceWorker.ready;
+  const existing = await reg.pushManager.getSubscription();
+  if (existing) {
+    await saveSubscription(existing);
+    return;
+  }
+  if (!VAPID_PUBLIC_KEY) return;
+  const sub = await reg.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+  });
+  await saveSubscription(sub);
+}
+
 export function usePushSubscription() {
   useEffect(() => {
-    if (
-      typeof window === "undefined" ||
-      !("serviceWorker" in navigator) ||
-      !("PushManager" in window) ||
-      Notification.permission !== "granted"
-    )
-      return;
-
-    async function subscribe() {
-      const reg = await navigator.serviceWorker.ready;
-      const existing = await reg.pushManager.getSubscription();
-      if (existing) {
-        await saveSubscription(existing);
-        return;
-      }
-      if (!VAPID_PUBLIC_KEY) return;
-      const sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
-      });
-      await saveSubscription(sub);
-    }
-
-    subscribe().catch(console.error);
+    subscribeForPush().catch(console.error);
   }, []);
 }
 

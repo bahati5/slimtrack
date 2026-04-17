@@ -39,24 +39,26 @@ export function StatsView({
   weights,
   logs,
   measures,
+  serverNow,
 }: {
   weights: WLog[];
   logs: DLog[];
   measures: Measure[];
+  serverNow: string;
 }) {
   const [range, setRange] = useState<number>(30);
 
   const filteredWeights = useMemo(() => {
-    const limit = new Date();
+    const limit = new Date(serverNow);
     limit.setDate(limit.getDate() - range);
     return weights.filter((w) => new Date(w.logged_at) >= limit);
-  }, [weights, range]);
+  }, [weights, range, serverNow]);
 
   const filteredLogs = useMemo(() => {
-    const limit = new Date();
+    const limit = new Date(serverNow);
     limit.setDate(limit.getDate() - range);
     return logs.filter((l) => new Date(l.log_date) >= limit);
-  }, [logs, range]);
+  }, [logs, range, serverNow]);
 
   const streak = useMemo(() => {
     // plus long streak consécutif de déficit respecté, en remontant depuis aujourd'hui

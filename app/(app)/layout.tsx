@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import type { ReactNode } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { BottomNav } from "@/components/shared/bottom-nav";
+import { NotificationsBell } from "@/components/shared/notifications-bell";
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const supabase = await createClient();
@@ -32,7 +33,8 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-lg flex-col pb-24 safe-top">
+    <div className="relative mx-auto flex min-h-dvh w-full max-w-lg flex-col pb-24 safe-top">
+      {!isOnboarding && <NotificationsBell />}
       <main className="flex-1">{children}</main>
       {!isOnboarding && (
         <BottomNav

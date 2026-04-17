@@ -5,7 +5,8 @@ import { createClient } from "@/lib/supabase/client";
 import { Card, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
-import { MessageCircle, Send, Trash2 } from "lucide-react";
+import MessageCircle from "lucide-react/dist/esm/icons/message-circle";
+import Send from "lucide-react/dist/esm/icons/send";
 import { cn } from "@/lib/utils/cn";
 
 interface Comment {
@@ -120,18 +121,6 @@ export function MealComments({
     await load();
   }
 
-  async function remove(id: string) {
-    const { error } = await supabase
-      .from("meal_comments")
-      .delete()
-      .eq("id", id);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-    await load();
-  }
-
   return (
     <Card className="space-y-3">
       <div className="flex items-center gap-2">
@@ -161,7 +150,7 @@ export function MealComments({
               >
                 <div
                   className={cn(
-                    "group relative max-w-[85%] rounded-2xl px-3 py-2 text-sm",
+                    "max-w-[85%] rounded-2xl px-3 py-2 text-sm",
                     mine
                       ? "bg-[#4f2b1f] text-[#efcedb]"
                       : "bg-[var(--color-card-soft)] text-[var(--color-text)]",
@@ -179,18 +168,10 @@ export function MealComments({
                       month: "short",
                       hour: "2-digit",
                       minute: "2-digit",
+                      timeZone: "Africa/Libreville",
                     }).format(new Date(c.created_at))}
                   </div>
                   <div className="whitespace-pre-wrap">{c.body}</div>
-                  {mine && (
-                    <button
-                      onClick={() => remove(c.id)}
-                      aria-label="Supprimer"
-                      className="absolute -right-2 -top-2 hidden size-6 items-center justify-center rounded-full bg-[var(--color-warning)] text-white group-hover:flex"
-                    >
-                      <Trash2 className="size-3" />
-                    </button>
-                  )}
                 </div>
               </li>
             );

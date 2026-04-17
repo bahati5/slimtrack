@@ -6,9 +6,7 @@ import {
   QueryClientProvider,
   isServer,
 } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { ToastProvider } from "@/components/ui/toast";
-import { SplashScreen } from "@/components/shared/splash-screen";
 
 function makeQueryClient() {
   return new QueryClient({
@@ -35,11 +33,7 @@ export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => getQueryClient());
   return (
     <QueryClientProvider client={queryClient}>
-      <SplashScreen />
       <ToastProvider>{children}</ToastProvider>
-      {process.env.NODE_ENV === "development" && (
-        <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
-      )}
     </QueryClientProvider>
   );
 }

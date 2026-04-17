@@ -149,6 +149,7 @@ export interface Notification {
   body: string;
   is_read: boolean;
   created_at: string;
+  link_url?: string | null;
 }
 
 export interface PushSubscription {

@@ -40,19 +40,21 @@ interface Payload {
     total_kcal_eaten: number;
     net_kcal: number;
   };
-  old_record: {
-    status: "empty" | "partial" | "complete";
+  old_record?: {
+    status?: "empty" | "partial" | "complete";
+    total_kcal_eaten?: number;
+    total_kcal_burned?: number;
+    steps_kcal_burned?: number;
+    net_kcal?: number;
   };
 }
 
 serve(async (req: Request) => {
   const payload = (await req.json()) as Payload;
   const { user_id, log_date, status, total_kcal_eaten } = payload?.record ?? {};
-  const old_status = payload?.old_record?.status;
 
-  // Déclencher uniquement quand le statut progresse (pas si déjà complete → complete)
+  // Le trigger SQL n’appelle cette fonction que si repas/activité/statut ont changé
   if (!user_id || status === "empty") return new Response("noop", { status: 200 });
-  if (old_status === status) return new Response("noop", { status: 200 });
 
   const sb = createClient(SUPABASE_URL, SERVICE_KEY);
 
@@ -78,7 +80,8 @@ serve(async (req: Request) => {
   const title = `${clientName} a mis à jour son journal`;
   const body = `Données du ${log_date} ${statusLabel} — ${total_kcal_eaten} kcal enregistrées`;
 
-  const pushBody = JSON.stringify({ title, body, url: `/coach/${user_id}` });
+  const linkUrl = `/coach/${user_id}`;
+  const pushBody = JSON.stringify({ title, body, url: linkUrl });
 
   await Promise.allSettled(
     (subs ?? []).map(
@@ -90,12 +93,12 @@ serve(async (req: Request) => {
     ),
   );
 
-  // Notification en base pour le coach
   await sb.from("notifications").insert({
     user_id: coachId,
     type: "client_log",
     title,
     body,
+    link_url: linkUrl,
   });
 
   return new Response(JSON.stringify({ ok: true }), {

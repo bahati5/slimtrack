@@ -19,7 +19,7 @@ export default async function CoachPage() {
     .select("role")
     .eq("id", user.id)
     .maybeSingle();
-  if (me?.role !== "coach") redirect("/today");
+  if (me?.role !== "coach" && me?.role !== "admin") redirect("/today");
 
   const { data: clients } = await supabase
     .from("profiles")

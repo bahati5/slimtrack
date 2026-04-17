@@ -83,10 +83,11 @@ serve(async (req: Request) => {
     .select("endpoint, p256dh, auth")
     .eq("user_id", targetUserId);
 
+  const linkUrl = `/meal/${meal_id}`;
   const pushBody = JSON.stringify({
     title,
     body: commentBody.slice(0, 140),
-    url: `/meal/${meal_id}`,
+    url: linkUrl,
   });
 
   await Promise.allSettled(
@@ -103,6 +104,7 @@ serve(async (req: Request) => {
     type: "meal_comment",
     title,
     body: commentBody.slice(0, 140),
+    link_url: linkUrl,
   });
 
   return new Response(JSON.stringify({ ok: true }), {

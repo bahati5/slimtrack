@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { startTransition, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { KcalRing } from "@/components/daily/kcal-ring";
 import { MonthCalendar } from "@/components/daily/month-calendar";
 import { Fab } from "@/components/shared/fab";
+import { CoachDailyCommentForm } from "@/components/coach/coach-daily-comment-form";
 import { formatKcal } from "@/lib/utils/format";
 import {
   CheckCircle2,
@@ -108,14 +109,14 @@ export function TodayView({
   }
 
   function shiftDay(delta: number) {
-    const d = new Date(date + "T00:00:00");
-    d.setDate(d.getDate() + delta);
+    const d = new Date(date + "T00:00:00Z");
+    d.setUTCDate(d.getUTCDate() + delta);
     goToDate(d.toISOString().slice(0, 10));
   }
 
   function selectDateFromCalendar(newDate: string) {
     goToDate(newDate);
-    setViewMode("day");
+    startTransition(() => setViewMode("day"));
   }
 
   const { data, isLoading } = useQuery({
@@ -270,7 +271,8 @@ export function TodayView({
                 weekday: "long",
                 day: "numeric",
                 month: "long",
-              }).format(new Date(date + "T00:00:00"))}
+                timeZone: "UTC",
+              }).format(new Date(date + "T00:00:00Z"))}
             </span>
           </div>
           <button
@@ -285,7 +287,7 @@ export function TodayView({
         <div className="flex rounded-full bg-[var(--color-card-soft)] p-1 text-xs font-medium text-[var(--color-text)]">
           <button
             type="button"
-            onClick={() => setViewMode("day")}
+            onClick={() => startTransition(() => setViewMode("day"))}
             className={
               viewMode === "day"
                 ? "flex-1 rounded-full bg-[var(--color-card)] px-4 py-2 shadow-sm"
@@ -296,7 +298,7 @@ export function TodayView({
           </button>
           <button
             type="button"
-            onClick={() => setViewMode("calendar")}
+            onClick={() => startTransition(() => setViewMode("calendar"))}
             className={
               viewMode === "calendar"
                 ? "flex-1 rounded-full bg-[var(--color-card)] px-4 py-2 shadow-sm"
@@ -358,6 +360,7 @@ export function TodayView({
                   {new Intl.DateTimeFormat("fr-FR", {
                     dateStyle: "medium",
                     timeStyle: "short",
+                    timeZone: profile?.timezone ?? "Africa/Libreville",
                   }).format(new Date(daily.coach_commented_at))}
                 </p>
               ) : null}
@@ -425,6 +428,21 @@ export function TodayView({
         </>
       )}
 
+      {readonly && targetUserId && data?.daily?.id ? (
+        <Card className="mt-2 border-[var(--color-primary)]/25">
+          <div className="mb-3 text-sm font-semibold text-[#4f2b1f]">
+            Commentaire coach (jour)
+          </div>
+          <CoachDailyCommentForm
+            dailyLogId={data.daily.id}
+            clientId={targetUserId}
+            coachId={userId}
+            initial={data.daily.coach_comment ?? ""}
+            invalidateQueryKey={["today", viewUserId, date]}
+          />
+        </Card>
+      ) : null}
+
       {!readonly && <Fab />}
     </div>
   );
@@ -432,8 +450,8 @@ export function TodayView({
 
 function formatRelativeDay(date: string, today: string): string {
   if (date === today) return "Aujourd'hui";
-  const d = new Date(date + "T00:00:00");
-  const t = new Date(today + "T00:00:00");
+  const d = new Date(date + "T00:00:00Z");
+  const t = new Date(today + "T00:00:00Z");
   const diff = Math.round((d.getTime() - t.getTime()) / 86400000);
   if (diff === -1) return "Hier";
   if (diff === 1) return "Demain";

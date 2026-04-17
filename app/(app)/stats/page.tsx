@@ -50,6 +50,7 @@ export default async function StatsPage() {
         weights={weights ?? []}
         logs={logs ?? []}
         measures={measures ?? []}
+        serverNow={new Date().toISOString()}
       />
     </div>
   );
