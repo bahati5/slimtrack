@@ -1,26 +1,115 @@
 @import "tailwindcss";
+@plugin "tailwindcss-animate";
 
+/* SlimTrack design tokens — Petal Frost / Espresso (thème clair) */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
+
+  /* Duo de base */
+  --color-dominant: #4f2b1f;   /* Espresso — actions, boutons, icônes */
+  --color-secondary: #efcedb;  /* Petal Frost — fond global */
+
+  /* Tokens sémantiques */
+  --color-primary: #4f2b1f;        /* Espresso — boutons primaires */
+  --color-primary-soft: #7a4535;   /* Espresso clair — hover */
+  --color-accent: #4f2b1f;         /* Espresso — FAB, anneau kcal */
+  --color-success: #3d7a52;        /* Vert sauge sombre — déficit ok */
+  --color-warning: #c4622a;        /* Brun-orange — alertes */
+  --color-info: #7a4535;           /* Espresso moyen — infos coach */
+  --color-neutral: #6b5248;        /* Brun neutre — stats */
+
+  --color-bg: #efcedb;             /* Petal Frost — fond global */
+  --color-card: #ffffff;           /* Blanc pur — cartes */
+  --color-card-soft: #faf0f5;      /* Petal Frost très clair — variante */
+  --color-border: #e0b8cc;         /* Rose poudré — bordures */
+  --color-text: #2a1510;           /* Espresso très sombre — texte principal */
+  --color-muted: #8a6a62;          /* Brun rosé — texte secondaire */
+
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--color-bg);
+  --color-foreground: var(--color-text);
+  --color-card: var(--color-card);
+  --color-card-soft: var(--color-card-soft);
+  --color-border: var(--color-border);
+  --color-muted: var(--color-muted);
+  --color-primary: var(--color-primary);
+  --color-primary-soft: var(--color-primary-soft);
+  --color-accent: var(--color-accent);
+  --color-success: var(--color-success);
+  --color-warning: var(--color-warning);
+  --color-info: var(--color-info);
+  --color-neutral: var(--color-neutral);
+
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+
+  --font-sans:
+    var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  min-height: 100dvh;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: contain;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar discrète */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+
+/* Safe areas mobile */
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Utility: fond Espresso plat (remplace les anciens dégradés) */
+.bg-gradient-primary {
+  background: #4f2b1f;
+}
+.text-gradient-primary {
+  color: var(--color-primary);
+}
+
+/* Sur fond Espresso, le texte doit être Petal Frost (contraste). */
+.on-warm {
+  color: #efcedb;
+}
+
+/* Transitions onboarding & sheets */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-in-up {
+  animation: fadeInUp 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }

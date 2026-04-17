@@ -1,0 +1,82 @@
+import { createClient } from "@/lib/supabase/server";
+import { ProfileForm } from "./profile-form";
+import { MeasurementsForm } from "./measurements-form";
+import { LogoutButton } from "./logout-button";
+import { CoachModeCard } from "./coach-mode-card";
+import { InviteCodeCard } from "@/components/shared/invite-code-card";
+
+export const dynamic = "force-dynamic";
+
+export default async function ProfilePage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  // Dernières mensurations
+  const { data: lastMeasurement } = await supabase
+    .from("measurements")
+    .select(
+      "waist_cm, hips_cm, chest_cm, left_arm_cm, right_arm_cm, left_thigh_cm, right_thigh_cm",
+    )
+    .eq("user_id", user.id)
+    .order("measured_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  // Nom du coach si assigné
+  let coachName: string | null = null;
+  if (profile?.coach_id) {
+    const { data: coach } = await supabase
+      .from("profiles")
+      .select("full_name")
+      .eq("id", profile.coach_id)
+      .maybeSingle();
+    coachName = coach?.full_name ?? null;
+  }
+
+  return (
+    <div className="space-y-4 p-5 pb-8">
+      <header className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Mon profil</h1>
+          <p className="text-sm text-[var(--color-muted)]">
+            Ces infos servent à calculer ton objectif kcal journalier.
+          </p>
+        </div>
+      </header>
+
+      <CoachModeCard currentRole={profile?.role ?? null} />
+
+      <InviteCodeCard
+        initialCode={profile?.invite_code ?? null}
+        coachName={coachName}
+      />
+
+      <ProfileForm
+        initial={{
+          full_name: profile?.full_name ?? null,
+          age: profile?.age ?? null,
+          sex: profile?.sex ?? null,
+          height_cm: profile?.height_cm ?? null,
+          current_weight_kg: profile?.current_weight_kg ?? null,
+          goal_weight_kg: profile?.goal_weight_kg ?? null,
+          activity_level: profile?.activity_level ?? null,
+          deficit_kcal: profile?.deficit_kcal ?? 500,
+          avatar_url: profile?.avatar_url ?? null,
+        }}
+      />
+
+      <MeasurementsForm last={lastMeasurement ?? null} />
+
+      <LogoutButton />
+    </div>
+  );
+}
