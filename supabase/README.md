@@ -12,7 +12,10 @@ Tout le métier de SlimTrack vit ici : schéma, triggers, RLS, Edge Functions.
    - `0002_triggers.sql` — triggers PL/pgSQL (Mifflin-St Jeor, recalc meals/daily_logs, kcal pas)
    - `0003_rls.sql` — Row Level Security
    - `0004_seed_food.sql` — base d'aliments FR (~120 aliments courants)
-3. Dans **Authentication → URL Configuration**, ajoute `http://localhost:3000/auth/callback` dans les redirect URLs.
+3. Dans **Authentication → URL Configuration**, ajoute au minimum :
+   - `http://localhost:3000/auth/callback` (lien magique + réinitialisation mot de passe via PKCE)
+   - `http://localhost:3000/auth/update-password` (page de choix du nouveau mot de passe après redirection)
+   - En prod, les mêmes chemins avec ton domaine. Tu peux aussi utiliser un motif du type `http://localhost:3000/auth/**` si ton projet Supabase l’accepte.
 4. Copie `URL` + `anon` key + `service_role` key dans `.env.local`.
 
 ### Option B — Supabase CLI

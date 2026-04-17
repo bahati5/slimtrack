@@ -14,6 +14,14 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) return NextResponse.redirect(`${origin}${next}`);
+    const msg =
+      error.message ||
+      "Échec de la connexion (échange du code). Vérifie les URL de redirection dans Supabase.";
+    return NextResponse.redirect(
+      `${origin}/login?error=callback&message=${encodeURIComponent(msg)}`,
+    );
   }
-  return NextResponse.redirect(`${origin}/login?error=auth`);
+  return NextResponse.redirect(
+    `${origin}/login?error=auth&message=${encodeURIComponent("Lien incomplet ou expiré. Demande un nouveau lien magique.")}`,
+  );
 }

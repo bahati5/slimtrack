@@ -5,8 +5,16 @@ import { createServerClient } from "@supabase/ssr";
  * Rafraîchit la session Supabase à chaque requête et protège les routes privées.
  * Appelée depuis `middleware.ts` à la racine.
  */
+function pathnameHeaders(request: NextRequest) {
+  const h = new Headers(request.headers);
+  h.set("x-pathname", request.nextUrl.pathname);
+  return h;
+}
+
 export async function updateSession(request: NextRequest) {
-  let response = NextResponse.next({ request });
+  let response = NextResponse.next({
+    request: { headers: pathnameHeaders(request) },
+  });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -20,7 +28,9 @@ export async function updateSession(request: NextRequest) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value),
           );
-          response = NextResponse.next({ request });
+          response = NextResponse.next({
+            request: { headers: pathnameHeaders(request) },
+          });
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, options),
           );

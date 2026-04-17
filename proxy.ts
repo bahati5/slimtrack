@@ -5,10 +5,9 @@ import { updateSession } from "@/lib/supabase/middleware";
 // L'API reste la même — on garde aussi la fonction `updateSession` dans
 // `lib/supabase/middleware.ts` par souci de cohérence avec les guides Supabase.
 export async function proxy(request: NextRequest) {
-  const response = await updateSession(request);
-  // Injecte le pathname pour que les Server Components (layout) puissent le lire
-  response.headers.set("x-pathname", request.nextUrl.pathname);
-  return response;
+  // `x-pathname` est injecté sur la requête dans `updateSession` (pas sur la réponse)
+  // pour que les Server Components puissent le lire via `headers()`.
+  return updateSession(request);
 }
 
 export const config = {

@@ -9,6 +9,18 @@
 --
 -- IMPORTANT : remplace l'email et le mot de passe avant d'exécuter
 -- en production, ou modifie-les immédiatement après via le dashboard.
+--
+-- Hash : GoTrue (Supabase Auth) utilise bcrypt avec un coût de 10 par défaut.
+-- `gen_salt('bf')` seul peut produire un coût différent selon PostgreSQL → échec
+-- à la connexion malgré le bon mot de passe. On force `gen_salt('bf', 10)`.
+--
+-- Colonnes texte `auth.users` : si confirmation_token / email_change / … sont NULL,
+-- GoTrue renvoie « Database error querying schema » (scan NULL → string).
+-- Il faut aussi une ligne `auth.identities` (provider `email`) pour pouvoir se connecter.
+--
+-- Si la connexion échoue encore : Authentication → tu peux avoir « leaked password »
+-- ou règles de complexité qui bloquent ce mot de passe (WeakPasswordError) — change
+-- le mot de passe dans le dashboard ou désactive temporairement ces options.
 
 do $$
 declare
@@ -34,13 +46,15 @@ begin
       updated_at,
       confirmation_token,
       recovery_token,
+      email_change,
+      email_change_token_new,
       aud,
       role
     ) values (
       v_uid,
       '00000000-0000-0000-0000-000000000000',
       v_email,
-      crypt(v_pass, gen_salt('bf')),
+      extensions.crypt(v_pass::text, extensions.gen_salt('bf'::text, 10)),
       now(),
       '{"provider":"email","providers":["email"]}',
       '{"full_name":"Super Admin"}',
@@ -48,8 +62,31 @@ begin
       now(),
       '',
       '',
+      '',
+      '',
       'authenticated',
       'authenticated'
+    );
+
+    insert into auth.identities (
+      id,
+      user_id,
+      provider_id,
+      identity_data,
+      provider,
+      last_sign_in_at,
+      created_at,
+      updated_at
+    )
+    values (
+      gen_random_uuid(),
+      v_uid,
+      v_uid::text,
+      jsonb_build_object('sub', v_uid::text, 'email', v_email),
+      'email',
+      now(),
+      now(),
+      now()
     );
   end if;
 
