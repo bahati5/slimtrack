@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
 import { Providers } from "@/components/shared/providers";
 import { PwaPrompt } from "@/components/shared/pwa-prompt";
+import { SplashScreen } from "@/components/shared/splash-screen";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -49,8 +50,10 @@ export default function RootLayout({
         suppressHydrationWarning
         className="min-h-dvh flex flex-col bg-[#efcedb] text-[#2a1510]">
         <Providers>
-          {children}
-          <PwaPrompt />
+          <SplashScreen>
+            {children}
+            <PwaPrompt />
+          </SplashScreen>
         </Providers>
       </body>
     </html>
