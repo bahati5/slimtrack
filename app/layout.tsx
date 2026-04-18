@@ -7,6 +7,8 @@ import "./globals.css";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  // Réduit les allers-retours d’injection de styles dans le <head> (erreurs removeChild possibles avec React 19).
+  preload: false,
 });
 
 export const metadata: Metadata = {

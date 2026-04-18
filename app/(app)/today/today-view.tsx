@@ -103,6 +103,8 @@ export function TodayView({
   const viewUserId = targetUserId ?? userId;
   const [viewMode, setViewMode] = useState<"day" | "calendar">("day");
   const coachFirst = firstName(coachDisplayName ?? undefined);
+  const fabDateQuery =
+    date === today ? "" : `?date=${encodeURIComponent(date)}`;
 
   function goToDate(newDate: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -186,17 +188,32 @@ export function TodayView({
       .channel(`today-${viewUserId}`)
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "daily_logs", filter: `user_id=eq.${viewUserId}` },
+        {
+          event: "*",
+          schema: "public",
+          table: "daily_logs",
+          filter: `user_id=eq.${viewUserId}`,
+        },
         () => qc.invalidateQueries({ queryKey: ["today", viewUserId, date] }),
       )
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "meals", filter: `user_id=eq.${viewUserId}` },
+        {
+          event: "*",
+          schema: "public",
+          table: "meals",
+          filter: `user_id=eq.${viewUserId}`,
+        },
         () => qc.invalidateQueries({ queryKey: ["today", viewUserId, date] }),
       )
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "activities", filter: `user_id=eq.${viewUserId}` },
+        {
+          event: "*",
+          schema: "public",
+          table: "activities",
+          filter: `user_id=eq.${viewUserId}`,
+        },
         () => qc.invalidateQueries({ queryKey: ["today", viewUserId, date] }),
       )
       .on(
@@ -238,7 +255,11 @@ export function TodayView({
   const respected = daily?.deficit_respected ?? true;
 
   return (
-    <div className="space-y-4 p-5">
+    <div
+      className={
+        readonly ? "space-y-4 p-5" : "space-y-4 p-5 pb-40 max-[380px]:pb-44"
+      }
+    >
       {/* Hero */}
       <header className="space-y-3">
         <div className="flex items-center justify-between">
@@ -264,10 +285,10 @@ export function TodayView({
         </div>
         <div className="flex items-center justify-between rounded-2xl bg-[var(--color-card)] p-2">
           <button
+            type="button"
             onClick={() => shiftDay(-1)}
-            className="flex size-9 items-center justify-center rounded-xl text-[var(--color-text)] transition hover:bg-[var(--color-card-soft)]"
-            aria-label="Jour précédent"
-          >
+            className="flex min-h-11 min-w-11 touch-manipulation items-center justify-center rounded-xl text-[var(--color-text)] transition hover:bg-[var(--color-card-soft)]"
+            aria-label="Jour précédent">
             <ChevronLeft className="size-5" />
           </button>
           <div className="flex flex-col items-center">
@@ -284,11 +305,11 @@ export function TodayView({
             </span>
           </div>
           <button
+            type="button"
             onClick={() => shiftDay(1)}
             disabled={isToday}
-            className="flex size-9 items-center justify-center rounded-xl text-[var(--color-text)] transition hover:bg-[var(--color-card-soft)] disabled:opacity-30"
-            aria-label="Jour suivant"
-          >
+            className="flex min-h-11 min-w-11 touch-manipulation items-center justify-center rounded-xl text-[var(--color-text)] transition hover:bg-[var(--color-card-soft)] disabled:opacity-30"
+            aria-label="Jour suivant">
             <ChevronRight className="size-5" />
           </button>
         </div>
@@ -298,10 +319,9 @@ export function TodayView({
             onClick={() => startTransition(() => setViewMode("day"))}
             className={
               viewMode === "day"
-                ? "flex-1 rounded-full bg-[var(--color-card)] px-4 py-2 shadow-sm"
-                : "flex-1 rounded-full px-4 py-2 transition hover:bg-[var(--color-card)]/70"
-            }
-          >
+                ? "min-h-11 flex-1 touch-manipulation rounded-full bg-[var(--color-card)] px-4 py-2 shadow-sm"
+                : "min-h-11 flex-1 touch-manipulation rounded-full px-4 py-2 transition hover:bg-[var(--color-card)]/70"
+            }>
             Jour
           </button>
           <button
@@ -309,10 +329,9 @@ export function TodayView({
             onClick={() => startTransition(() => setViewMode("calendar"))}
             className={
               viewMode === "calendar"
-                ? "flex-1 rounded-full bg-[var(--color-card)] px-4 py-2 shadow-sm"
-                : "flex-1 rounded-full px-4 py-2 transition hover:bg-[var(--color-card)]/70"
-            }
-          >
+                ? "min-h-11 flex-1 touch-manipulation rounded-full bg-[var(--color-card)] px-4 py-2 shadow-sm"
+                : "min-h-11 flex-1 touch-manipulation rounded-full px-4 py-2 transition hover:bg-[var(--color-card)]/70"
+            }>
             Calendrier
           </button>
         </div>
@@ -352,7 +371,10 @@ export function TodayView({
               />
             </div>
             <div className="text-center text-xs text-[var(--color-muted)]">
-              Bilan net aujourd&apos;hui : <span className="font-semibold text-[var(--color-text)]">{formatKcal(net)}</span>
+              Bilan net aujourd&apos;hui :{" "}
+              <span className="font-semibold text-[var(--color-text)]">
+                {formatKcal(net)}
+              </span>
             </div>
           </Card>
 
@@ -386,8 +408,7 @@ export function TodayView({
                 : isToday
                   ? "/log-meal"
                   : `/log-meal?date=${date}`
-            }
-          >
+            }>
             {data?.meals.length ? (
               <ul className="space-y-2">
                 {data.meals.map((m) => (
@@ -415,8 +436,7 @@ export function TodayView({
                 : isToday
                   ? "/log-activity"
                   : `/log-activity?date=${date}`
-            }
-          >
+            }>
             {data?.activities.length ? (
               <ul className="space-y-2">
                 {data.activities.map((a) => (
@@ -455,14 +475,17 @@ export function TodayView({
         </Card>
       ) : null}
 
-      {!readonly && <Fab />}
+      {!readonly && <Fab dateQuery={fabDateQuery} />}
     </div>
   );
 }
 
 function TodayReadonlySkeleton() {
   return (
-    <div className="animate-pulse space-y-4" aria-busy="true" aria-label="Chargement des données">
+    <div
+      className="animate-pulse space-y-4"
+      aria-busy="true"
+      aria-label="Chargement des données">
       <Card className="flex flex-col items-center gap-4 py-8">
         <div className="aspect-square w-[min(18rem,80vw)] max-h-72 rounded-full bg-[var(--color-card-soft)]" />
         <div className="grid w-full grid-cols-3 gap-3">
@@ -514,8 +537,7 @@ function Kpi({
     <div className="rounded-2xl bg-[var(--color-card-soft)] p-3">
       <div
         className="mx-auto mb-1 flex size-7 items-center justify-center rounded-full"
-        style={{ background: `${color}20`, color }}
-      >
+        style={{ background: `${color}20`, color }}>
         {icon}
       </div>
       <div className="text-xs text-[var(--color-muted)]">{label}</div>
@@ -540,8 +562,7 @@ function Section({
         {action && (
           <Link
             href={action}
-            className="inline-flex items-center gap-1 rounded-full bg-[var(--color-card)] px-3 py-1 text-xs font-medium text-[var(--color-primary-soft)]"
-          >
+            className="inline-flex min-h-11 min-w-[44px] touch-manipulation items-center gap-1 rounded-full bg-[var(--color-card)] px-3 py-1.5 text-xs font-medium text-[var(--color-primary-soft)]">
             <Plus className="size-3" /> Ajouter
           </Link>
         )}
@@ -578,7 +599,13 @@ function MealRow({
     <div className="flex items-center gap-3 rounded-2xl bg-[var(--color-card)] p-3">
       <div className="relative size-14 overflow-hidden rounded-xl bg-[var(--color-card-soft)]">
         {thumb ? (
-          <Image src={thumb} alt="" fill className="object-cover" sizes="56px" />
+          <Image
+            src={thumb}
+            alt=""
+            fill
+            className="object-cover"
+            sizes="56px"
+          />
         ) : (
           <Utensils className="absolute inset-0 m-auto size-5 text-[var(--color-muted)]" />
         )}
@@ -586,18 +613,20 @@ function MealRow({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="truncate font-medium">{meal.name}</span>
-          <Badge tone="primary">{MEAL_LABELS[meal.meal_type] ?? meal.meal_type}</Badge>
+          <Badge tone="primary">
+            {MEAL_LABELS[meal.meal_type] ?? meal.meal_type}
+          </Badge>
         </div>
         <div className="text-xs text-[var(--color-muted)]">
-          P {Math.round(meal.total_protein_g)}g · G {Math.round(meal.total_carbs_g)}g · L {Math.round(meal.total_fat_g)}g
+          P {Math.round(meal.total_protein_g)}g · G{" "}
+          {Math.round(meal.total_carbs_g)}g · L {Math.round(meal.total_fat_g)}g
         </div>
       </div>
       <div className="flex shrink-0 flex-col items-end gap-0.5 text-right">
         {commentCount > 0 ? (
           <span
             className="inline-flex items-center gap-0.5 text-xs font-semibold text-[var(--color-primary)]"
-            title="Commentaires sur ce repas"
-          >
+            title="Commentaires sur ce repas">
             <MessageCircle className="size-3.5" />
             {commentCount}
           </span>
@@ -616,7 +645,13 @@ function ActivityRowCard({ a }: { a: ActivityRow }) {
     <div className="flex items-center gap-3 rounded-2xl bg-[var(--color-card)] p-3">
       <div className="relative size-14 overflow-hidden rounded-xl bg-[var(--color-card-soft)]">
         {thumb ? (
-          <Image src={thumb} alt="" fill className="object-cover" sizes="56px" />
+          <Image
+            src={thumb}
+            alt=""
+            fill
+            className="object-cover"
+            sizes="56px"
+          />
         ) : (
           <Activity className="absolute inset-0 m-auto size-5 text-[var(--color-muted)]" />
         )}

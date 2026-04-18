@@ -2,14 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  Home,
-  BarChart3,
-  User,
-  Users,
-  Apple,
-  ShieldCheck,
-} from "lucide-react";
+import { Home, BarChart3, User, Users, Apple, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { useCoachHomeHref } from "@/components/shared/coach-home-context";
 
@@ -74,22 +67,20 @@ export function BottomNav({
         className={cn(
           "mx-auto grid max-w-lg px-2 py-2",
           items.length === 5 ? "grid-cols-5" : "grid-cols-4",
-        )}
-      >
+        )}>
         {items.map(({ href, label, icon: Icon }) => {
-          const active =
-            pathname === href || pathname.startsWith(href + "/");
+          const active = pathname === href || pathname.startsWith(href + "/");
           return (
             <li key={href} className="flex">
               <Link
                 href={href}
+                prefetch={false}
                 className={cn(
                   "flex flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-xs transition",
                   active
                     ? "text-[var(--color-primary-soft)]"
                     : "text-[var(--color-muted)] hover:text-[var(--color-text)]",
-                )}
-              >
+                )}>
                 <Icon className="size-5" />
                 <span className="font-medium">{label}</span>
               </Link>

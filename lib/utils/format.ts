@@ -34,3 +34,10 @@ export function todayIso(tz?: string | null) {
   };
   return new Intl.DateTimeFormat("fr-CA", opts).format(d);
 }
+
+/** Retour à la vue « Aujourd’hui » en conservant le jour sélectionné (`?date=`). */
+export function todayHrefAfterLog(selectedDate: string): string {
+  const today = todayIso();
+  if (selectedDate === today) return "/today";
+  return `/today?date=${encodeURIComponent(selectedDate)}`;
+}

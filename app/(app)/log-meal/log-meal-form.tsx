@@ -15,7 +15,7 @@ import {
   type FoodRow,
 } from "@/components/shared/food-search-input";
 import { MediaUploader } from "@/components/shared/media-uploader";
-import { formatKcal, todayIso } from "@/lib/utils/format";
+import { formatKcal, todayHrefAfterLog, todayIso } from "@/lib/utils/format";
 
 const MEAL_TYPES = [
   { value: "breakfast", label: "Petit-déj" },
@@ -147,7 +147,7 @@ export function LogMealForm({ userId: _userId }: { userId: string }) {
       return;
     }
     toast.success("Repas enregistré 🍽");
-    router.push("/today");
+    router.push(todayHrefAfterLog(date));
     router.refresh();
   }
 
@@ -169,8 +169,7 @@ export function LogMealForm({ userId: _userId }: { userId: string }) {
                 mealType === m.value
                   ? "bg-gradient-primary text-white"
                   : "bg-[var(--color-card-soft)] text-[var(--color-muted)]"
-              }`}
-            >
+              }`}>
               {m.label}
             </button>
           ))}
@@ -201,8 +200,7 @@ export function LogMealForm({ userId: _userId }: { userId: string }) {
           </CardTitle>
           <Link
             href="/foods"
-            className="text-xs font-medium text-[var(--color-primary-soft)] hover:underline"
-          >
+            className="text-xs font-medium text-[var(--color-primary-soft)] hover:underline">
             Gérer la base →
           </Link>
         </div>
@@ -216,8 +214,7 @@ export function LogMealForm({ userId: _userId }: { userId: string }) {
         <button
           type="button"
           onClick={addEmptyItem}
-          className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[var(--color-border)] px-4 py-3 text-sm font-semibold text-[var(--color-primary-soft)] transition hover:border-[var(--color-primary)] hover:bg-[var(--color-card-soft)]"
-        >
+          className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[var(--color-border)] px-4 py-3 text-sm font-semibold text-[var(--color-primary-soft)] transition hover:border-[var(--color-primary)] hover:bg-[var(--color-card-soft)]">
           <Plus className="size-5" />
           Ajouter un aliment
         </button>
@@ -230,8 +227,7 @@ export function LogMealForm({ userId: _userId }: { userId: string }) {
               return (
                 <li
                   key={it.tempId}
-                  className="space-y-2 rounded-2xl bg-[var(--color-card-soft)] p-3"
-                >
+                  className="space-y-2 rounded-2xl bg-[var(--color-card-soft)] p-3">
                   <div className="flex items-center gap-2">
                     <Input
                       value={it.name_fr}
@@ -245,8 +241,7 @@ export function LogMealForm({ userId: _userId }: { userId: string }) {
                       type="button"
                       onClick={() => removeItem(it.tempId)}
                       aria-label="Supprimer"
-                      className="rounded-full p-2 text-[var(--color-muted)] hover:bg-[var(--color-card)] hover:text-[var(--color-accent)]"
-                    >
+                      className="rounded-full p-2 text-[var(--color-muted)] hover:bg-[var(--color-card)] hover:text-[var(--color-accent)]">
                       <Trash2 className="size-4" />
                     </button>
                   </div>

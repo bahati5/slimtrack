@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/components/ui/toast";
 import { MediaUploader } from "@/components/shared/media-uploader";
-import { formatKcal, todayIso } from "@/lib/utils/format";
+import { formatKcal, todayHrefAfterLog, todayIso } from "@/lib/utils/format";
 import {
   Play,
   Dumbbell,
@@ -150,7 +150,7 @@ export function LogActivityForm({
       return;
     }
     toast.success("Activité enregistrée 💪");
-    router.push("/today");
+    router.push(todayHrefAfterLog(date));
     router.refresh();
   }
 
@@ -171,8 +171,7 @@ export function LogActivityForm({
                   active
                     ? "bg-gradient-primary text-white"
                     : "bg-[var(--color-card-soft)] text-[var(--color-muted)]"
-                }`}
-              >
+                }`}>
                 <Icon className="size-5" />
                 {t.label}
               </button>
@@ -253,9 +252,7 @@ export function LogActivityForm({
               Estimation basée sur ta masse ({weightKg} kg)
             </p>
           </div>
-          <Badge tone="success">
-            Estimé : {formatKcal(estimated)}
-          </Badge>
+          <Badge tone="success">Estimé : {formatKcal(estimated)}</Badge>
         </div>
         <Input
           type="number"

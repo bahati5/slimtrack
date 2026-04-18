@@ -90,7 +90,7 @@ export function MonthCalendar({
         <button
           type="button"
           onClick={() => setCurrentMonth((prev) => subMonths(prev, 1))}
-          className="flex size-9 items-center justify-center rounded-xl text-[var(--color-text)] transition hover:bg-[var(--color-card-soft)]"
+          className="flex min-h-11 min-w-11 touch-manipulation items-center justify-center rounded-xl text-[var(--color-text)] transition hover:bg-[var(--color-card-soft)]"
           aria-label="Mois précédent"
         >
           <ChevronLeft className="size-5" />
@@ -101,7 +101,7 @@ export function MonthCalendar({
         <button
           type="button"
           onClick={() => setCurrentMonth((prev) => addMonths(prev, 1))}
-          className="flex size-9 items-center justify-center rounded-xl text-[var(--color-text)] transition hover:bg-[var(--color-card-soft)]"
+          className="flex min-h-11 min-w-11 touch-manipulation items-center justify-center rounded-xl text-[var(--color-text)] transition hover:bg-[var(--color-card-soft)]"
           aria-label="Mois suivant"
         >
           <ChevronRight className="size-5" />
@@ -136,7 +136,7 @@ export function MonthCalendar({
               type="button"
               onClick={() => onSelectDate(dayIso)}
               className={cn(
-                "flex min-h-11 flex-col items-center justify-center gap-1 rounded-xl border transition",
+                "flex min-h-11 touch-manipulation flex-col items-center justify-center gap-1 rounded-xl border transition",
                 selected
                   ? "border-[var(--color-primary)] bg-[var(--color-card)]"
                   : "border-transparent hover:bg-[var(--color-card-soft)]/70",
