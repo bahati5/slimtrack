@@ -70,6 +70,13 @@ type DailyLog = {
   coach_commented_at?: string | null;
 };
 
+type TodayQueryData = {
+  daily: DailyLog | null;
+  meals: Meal[];
+  activities: ActivityRow[];
+  mealCommentCounts: Record<string, number>;
+};
+
 export function TodayView({
   userId,
   profile,
@@ -79,6 +86,7 @@ export function TodayView({
   basePath = "/today",
   serverToday,
   coachDisplayName = null,
+  initialData,
 }: {
   userId: string;
   profile: Profile | null;
@@ -94,6 +102,8 @@ export function TodayView({
   serverToday: string;
   /** Nom du coach (affiché sur le message du jour, etc.). */
   coachDisplayName?: string | null;
+  /** Données préchargées côté serveur pour la date « aujourd’hui » (évite le skeleton au premier rendu). */
+  initialData?: TodayQueryData;
 }) {
   const qc = useQueryClient();
   const router = useRouter();
@@ -127,8 +137,11 @@ export function TodayView({
     startTransition(() => setViewMode("day"));
   }
 
+  const useInitial =
+    !!initialData && date === today && viewUserId === userId;
   const { data, isLoading } = useQuery({
     queryKey: ["today", viewUserId, date],
+    initialData: useInitial ? initialData : undefined,
     queryFn: async () => {
       let daily: DailyLog | null = null;
       if (readonly) {

@@ -110,8 +110,31 @@ export default async function MealDetailPage({
         ) : null}
       </div>
 
-      {/* Photo */}
-      {mediaUrls.length > 0 ? (
+      {/* Photos */}
+      {mediaUrls.length > 1 ? (
+        <div className="-mx-5 overflow-x-auto px-5 pb-1">
+          <div className="flex snap-x snap-mandatory gap-3">
+            {mediaUrls.map((url, idx) => (
+              <div
+                key={url}
+                className="relative aspect-[4/3] w-[85%] shrink-0 snap-center overflow-hidden rounded-3xl bg-[var(--color-card-soft)]"
+              >
+                <Image
+                  src={url}
+                  alt={`${mealName} (${idx + 1}/${mediaUrls.length})`}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 640px) 85vw, 512px"
+                  priority={idx === 0}
+                />
+                <span className="absolute bottom-2 right-2 rounded-full bg-black/55 px-2 py-0.5 text-xs font-medium text-white">
+                  {idx + 1}/{mediaUrls.length}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : mediaUrls.length === 1 ? (
         <div className="relative aspect-[4/3] overflow-hidden rounded-3xl bg-[var(--color-card-soft)]">
           <Image
             src={mediaUrls[0]}

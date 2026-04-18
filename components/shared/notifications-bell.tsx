@@ -63,7 +63,6 @@ export function NotificationsBell() {
   return (
     <Link
       href="/notifications"
-      prefetch={false}
       className={cn(
         "fixed right-4 top-[max(1rem,env(safe-area-inset-top))] z-40 flex size-11 items-center justify-center rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)]/95 shadow-md backdrop-blur-sm transition hover:bg-[var(--color-card)]",
       )}

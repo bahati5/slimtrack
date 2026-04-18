@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   applicationName: "SlimTrack",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent",
+    statusBarStyle: "default",
     title: "SlimTrack",
   },
   formatDetection: { telephone: false },
@@ -45,9 +45,11 @@ export default function RootLayout({
     <html
       lang="fr"
       suppressHydrationWarning
+      style={{ backgroundColor: "#efcedb" }}
       className={`${geistSans.variable} h-full antialiased`}>
       <body
         suppressHydrationWarning
+        style={{ backgroundColor: "#efcedb" }}
         className="min-h-dvh flex flex-col bg-[#efcedb] text-[#2a1510]">
         <Providers>
           <SplashScreen>

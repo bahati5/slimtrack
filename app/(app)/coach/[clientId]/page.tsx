@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, LineChart } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { todayIso } from "@/lib/utils/format";
 import { UnlinkClientButton } from "@/components/coach/unlink-client-button";
@@ -59,7 +59,15 @@ export default async function CoachClientPage({
         >
           <ChevronLeft className="size-4" /> Clientes
         </Link>
-        <UnlinkClientButton clientId={clientId} clientName={client.full_name} />
+        <div className="flex items-center gap-2">
+          <Link
+            href={`/coach/${clientId}/stats`}
+            className="inline-flex items-center gap-1 rounded-full border border-[var(--color-border)] bg-[var(--color-card-soft)] px-3 py-1.5 text-xs font-medium text-[var(--color-text)] hover:bg-[var(--color-card)]"
+          >
+            <LineChart className="size-3.5" /> Statistiques
+          </Link>
+          <UnlinkClientButton clientId={clientId} clientName={client.full_name} />
+        </div>
       </div>
       <Suspense>
         <TodayView

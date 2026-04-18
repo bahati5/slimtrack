@@ -74,7 +74,6 @@ export function BottomNav({
             <li key={href} className="flex">
               <Link
                 href={href}
-                prefetch={false}
                 className={cn(
                   "flex flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-xs transition",
                   active
