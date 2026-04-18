@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     template: "%s · SlimTrack",
   },
   description:
-    "SlimTrack — PWA mobile-first pour suivre tes repas, activités et ton déficit calorique avec ta coach.",
+    "SlimTrack — PWA mobile-first pour suivre tes repas, activités et ton déficit calorique avec un accompagnement personnalisé.",
   applicationName: "SlimTrack",
   appleWebApp: {
     capable: true,
@@ -39,8 +39,13 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="fr" suppressHydrationWarning className={`${geistSans.variable} h-full antialiased`}>
-      <body suppressHydrationWarning className="min-h-dvh flex flex-col bg-[#efcedb] text-[#2a1510]">
+    <html
+      lang="fr"
+      suppressHydrationWarning
+      className={`${geistSans.variable} h-full antialiased`}>
+      <body
+        suppressHydrationWarning
+        className="min-h-dvh flex flex-col bg-[#efcedb] text-[#2a1510]">
         <Providers>
           {children}
           <PwaPrompt />

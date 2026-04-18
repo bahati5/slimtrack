@@ -3,7 +3,12 @@
 import { useEffect, useState } from "react";
 import { Download, Bell, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { usePushSubscription, subscribeForPush } from "@/lib/hooks/use-push-subscription";
+import { createClient } from "@/lib/supabase/client";
+import { firstName } from "@/lib/utils/format";
+import {
+  usePushSubscription,
+  subscribeForPush,
+} from "@/lib/hooks/use-push-subscription";
 
 type Step = "install" | "notify" | null;
 
@@ -19,6 +24,32 @@ export function PwaPrompt() {
   const [step, setStep] = useState<Step>(null);
   const [deferredPrompt, setDeferredPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
+  const [coachNotifyName, setCoachNotifyName] = useState<string | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    void (async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: p } = await supabase
+        .from("profiles")
+        .select("coach_id")
+        .eq("id", user.id)
+        .maybeSingle();
+      // @ts-expect-error supabase types not generated
+      const cid = p?.coach_id as string | null | undefined;
+      if (!cid) return;
+      const { data: c } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", cid)
+        .maybeSingle();
+      const fn = firstName((c?.full_name as string | null) ?? undefined);
+      if (fn) setCoachNotifyName(fn);
+    })();
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -97,8 +128,7 @@ export function PwaPrompt() {
         <button
           onClick={dismiss}
           className="absolute right-3 top-3 rounded-lg p-1 text-[var(--color-muted)] hover:text-[var(--color-text)]"
-          aria-label="Fermer"
-        >
+          aria-label="Fermer">
           <X className="size-4" />
         </button>
 
@@ -139,7 +169,9 @@ export function PwaPrompt() {
                   Activer les notifications
                 </p>
                 <p className="text-xs text-[var(--color-muted)]">
-                  Reçois les commentaires de ta coach en temps réel
+                  {coachNotifyName
+                    ? `Reçois les commentaires de ${coachNotifyName} en temps réel`
+                    : "Reçois les commentaires sur ton suivi en temps réel"}
                 </p>
               </div>
             </div>

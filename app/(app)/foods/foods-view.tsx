@@ -45,7 +45,14 @@ const CATEGORIES = [
 
 type Tab = "all" | "mine";
 
-export function FoodsView({ userId }: { userId: string }) {
+export function FoodsView({
+  userId,
+  isAdmin = false,
+}: {
+  userId: string;
+  /** Édition / suppression de toute la base (rôle admin côté serveur). */
+  isAdmin?: boolean;
+}) {
   const toast = useToast();
   const [foods, setFoods] = useState<Food[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,7 +71,7 @@ export function FoodsView({ userId }: { userId: string }) {
         "id,name,name_fr,kcal_per_100g,protein_per_100g,carbs_per_100g,fat_per_100g,fiber_per_100g,category,created_by",
       )
       .order("name_fr", { ascending: true })
-      .limit(500);
+      .limit(isAdmin ? 5000 : 500);
     if (tab === "mine") query = query.eq("created_by", userId);
     const { data, error } = await query;
     setLoading(false);
@@ -103,7 +110,7 @@ export function FoodsView({ userId }: { userId: string }) {
       fat_per_100g: 0,
       fiber_per_100g: 0,
       category: "autre",
-      created_by: userId,
+      created_by: isAdmin ? null : userId,
     });
     setSheetOpen(true);
   }
@@ -155,9 +162,11 @@ export function FoodsView({ userId }: { userId: string }) {
       }
       toast.success("Aliment mis à jour ✏️");
     } else {
-      const { error } = await supabase
-        .from("food_database")
-        .insert({ ...payload, created_by: userId });
+      const { error } = await supabase.from("food_database").insert(
+        isAdmin
+          ? { ...payload, created_by: null, is_custom: false }
+          : { ...payload, created_by: userId },
+      );
       if (error) {
         toast.error(error.message);
         return;
@@ -244,6 +253,7 @@ export function FoodsView({ userId }: { userId: string }) {
               <FoodRow
                 food={f}
                 mine={f.created_by === userId}
+                isAdmin={isAdmin}
                 onEdit={() => openEdit(f)}
                 onDelete={() => handleDelete(f)}
               />
@@ -270,7 +280,9 @@ export function FoodsView({ userId }: { userId: string }) {
               setSheetOpen(false);
               setEditing(null);
             }}
-            canEdit={!editing.id || editing.created_by === userId}
+            canEdit={
+              isAdmin || !editing.id || editing.created_by === userId
+            }
           />
         )}
       </BottomSheet>
@@ -281,11 +293,13 @@ export function FoodsView({ userId }: { userId: string }) {
 function FoodRow({
   food,
   mine,
+  isAdmin,
   onEdit,
   onDelete,
 }: {
   food: Food;
   mine: boolean;
+  isAdmin: boolean;
   onEdit: () => void;
   onDelete: () => void;
 }) {
@@ -325,7 +339,7 @@ function FoodRow({
         >
           <Pencil className="size-4" />
         </button>
-        {mine && (
+        {(mine || isAdmin) && (
           <button
             type="button"
             aria-label="Supprimer"

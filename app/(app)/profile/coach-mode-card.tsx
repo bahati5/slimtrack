@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardTitle, CardDescription } from "@/components/ui/card";
@@ -15,16 +16,24 @@ export function CoachModeCard({ currentRole }: { currentRole: string | null }) {
 
   if (currentRole === "coach" || currentRole === "admin") {
     return (
-      <Card className="flex items-center gap-3">
-        <div className="flex size-10 items-center justify-center rounded-2xl bg-[#4f2b1f]">
-          <CheckCircle2 className="size-5 on-warm" />
+      <Card className="space-y-3">
+        <div className="flex items-center gap-3">
+          <div className="flex size-10 items-center justify-center rounded-2xl bg-[#4f2b1f]">
+            <CheckCircle2 className="size-5 on-warm" />
+          </div>
+          <div>
+            <CardTitle>Mode coaching activé</CardTitle>
+            <CardDescription>
+              Tu peux affilier des clientes depuis l&apos;onglet Clientes.
+            </CardDescription>
+          </div>
         </div>
-        <div>
-          <CardTitle>Mode coaching activé</CardTitle>
-          <CardDescription>
-            Tu peux affilier des clientes depuis l&apos;onglet Clientes.
-          </CardDescription>
-        </div>
+        <Link
+          href="/today"
+          className="block text-center text-sm font-semibold text-[var(--color-primary-soft)] underline-offset-2 hover:underline"
+        >
+          Mon journal personnel (mes données)
+        </Link>
       </Card>
     );
   }

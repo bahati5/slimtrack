@@ -13,7 +13,7 @@ import { KcalRing } from "@/components/daily/kcal-ring";
 import { MonthCalendar } from "@/components/daily/month-calendar";
 import { Fab } from "@/components/shared/fab";
 import { CoachDailyCommentForm } from "@/components/coach/coach-daily-comment-form";
-import { formatKcal } from "@/lib/utils/format";
+import { firstName, formatKcal } from "@/lib/utils/format";
 import {
   CheckCircle2,
   Flame,
@@ -76,6 +76,7 @@ export function TodayView({
   titleOverride,
   basePath = "/today",
   serverToday,
+  coachDisplayName = null,
 }: {
   userId: string;
   profile: Profile | null;
@@ -89,6 +90,8 @@ export function TodayView({
   basePath?: string;
   /** Date « aujourd’hui » (YYYY-MM-DD) calculée côté serveur — évite les écarts d’hydratation. */
   serverToday: string;
+  /** Nom du coach (affiché sur le message du jour, etc.). */
+  coachDisplayName?: string | null;
 }) {
   const qc = useQueryClient();
   const router = useRouter();
@@ -99,6 +102,7 @@ export function TodayView({
   const isToday = date === today;
   const viewUserId = targetUserId ?? userId;
   const [viewMode, setViewMode] = useState<"day" | "calendar">("day");
+  const coachFirst = firstName(coachDisplayName ?? undefined);
 
   function goToDate(newDate: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -242,17 +246,21 @@ export function TodayView({
             {titleOverride ??
               `Salut ${profile.full_name?.split(" ")[0] ?? "👋"}`}
           </h1>
-          <Badge tone={respected ? "success" : "warning"}>
-            {respected ? (
-              <>
-                <CheckCircle2 className="size-3" /> Déficit respecté
-              </>
-            ) : (
-              <>
-                <AlertTriangle className="size-3" /> Déficit dépassé
-              </>
-            )}
-          </Badge>
+          {readonly && isLoading ? (
+            <Badge tone="neutral">Chargement…</Badge>
+          ) : (
+            <Badge tone={respected ? "success" : "warning"}>
+              {respected ? (
+                <>
+                  <CheckCircle2 className="size-3" /> Déficit respecté
+                </>
+              ) : (
+                <>
+                  <AlertTriangle className="size-3" /> Déficit dépassé
+                </>
+              )}
+            </Badge>
+          )}
         </div>
         <div className="flex items-center justify-between rounded-2xl bg-[var(--color-card)] p-2">
           <button
@@ -317,6 +325,8 @@ export function TodayView({
           serverToday={today}
           onSelectDate={selectDateFromCalendar}
         />
+      ) : readonly && isLoading ? (
+        <TodayReadonlySkeleton />
       ) : (
         <>
           {/* Anneau kcal */}
@@ -350,7 +360,7 @@ export function TodayView({
             <Card className="space-y-2 border-[var(--color-primary)]/25 bg-[var(--color-card-soft)]/90">
               <div className="flex items-center gap-2 text-sm font-semibold text-[#4f2b1f]">
                 <MessageCircle className="size-4 shrink-0" />
-                Message de ta coach
+                {coachFirst ? `Message de ${coachFirst}` : "Message"}
               </div>
               <p className="whitespace-pre-wrap text-sm text-[var(--color-text)]">
                 {daily.coach_comment}
@@ -420,18 +430,20 @@ export function TodayView({
             )}
           </Section>
 
-          {isLoading && (
+          {!readonly && isLoading ? (
             <div className="text-center text-xs text-[var(--color-muted)]">
               Chargement…
             </div>
-          )}
+          ) : null}
         </>
       )}
 
       {readonly && targetUserId && data?.daily?.id ? (
         <Card className="mt-2 border-[var(--color-primary)]/25">
           <div className="mb-3 text-sm font-semibold text-[#4f2b1f]">
-            Commentaire coach (jour)
+            {coachFirst
+              ? `Commentaire de ${coachFirst} (jour)`
+              : "Commentaire (jour)"}
           </div>
           <CoachDailyCommentForm
             dailyLogId={data.daily.id}
@@ -444,6 +456,34 @@ export function TodayView({
       ) : null}
 
       {!readonly && <Fab />}
+    </div>
+  );
+}
+
+function TodayReadonlySkeleton() {
+  return (
+    <div className="animate-pulse space-y-4" aria-busy="true" aria-label="Chargement des données">
+      <Card className="flex flex-col items-center gap-4 py-8">
+        <div className="aspect-square w-[min(18rem,80vw)] max-h-72 rounded-full bg-[var(--color-card-soft)]" />
+        <div className="grid w-full grid-cols-3 gap-3">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="h-24 rounded-2xl bg-[var(--color-card-soft)]"
+            />
+          ))}
+        </div>
+        <div className="mx-auto h-4 w-48 rounded bg-[var(--color-card-soft)]" />
+      </Card>
+      <section className="space-y-2">
+        <div className="h-5 w-16 rounded bg-[var(--color-card-soft)]" />
+        <div className="h-20 rounded-2xl bg-[var(--color-card-soft)]" />
+        <div className="h-20 rounded-2xl bg-[var(--color-card-soft)]" />
+      </section>
+      <section className="space-y-2">
+        <div className="h-5 w-24 rounded bg-[var(--color-card-soft)]" />
+        <div className="h-20 rounded-2xl bg-[var(--color-card-soft)]" />
+      </section>
     </div>
   );
 }

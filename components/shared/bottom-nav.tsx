@@ -11,6 +11,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { useCoachHomeHref } from "@/components/shared/coach-home-context";
 
 interface NavItem {
   href: string;
@@ -33,6 +34,7 @@ export function BottomNav({
   isAdmin?: boolean;
 }) {
   const pathname = usePathname();
+  const coachHomeHref = useCoachHomeHref();
   // Insertions additives avant l'onglet "Profil" :
   //   - user          : [Today, Aliments, Stats, Profil]        (4)
   //   - coach         : + Coach                                  (5)
@@ -40,10 +42,16 @@ export function BottomNav({
   //     On garde 5 max : admin remplace "Coach" par "Admin" (l'admin peut
   //     accéder aux pages coach via /admin de toute façon).
   let items: NavItem[];
+  const coachHomeItem = {
+    href: coachHomeHref ?? "/today",
+    label: coachHomeHref ? "Accueil" : "Mes données",
+    icon: Home,
+  };
+
   if (isAdmin) {
     items = [
       { href: "/coach", label: "Clientes", icon: Users },
-      { href: "/today", label: "Mes données", icon: Home },
+      coachHomeItem,
       { href: "/admin", label: "Admin", icon: ShieldCheck },
       { href: "/stats", label: "Stats", icon: BarChart3 },
       { href: "/profile", label: "Profil", icon: User },
@@ -51,7 +59,7 @@ export function BottomNav({
   } else if (isCoach) {
     items = [
       { href: "/coach", label: "Clientes", icon: Users },
-      { href: "/today", label: "Mes données", icon: Home },
+      coachHomeItem,
       { href: "/foods", label: "Aliments", icon: Apple },
       { href: "/stats", label: "Stats", icon: BarChart3 },
       { href: "/profile", label: "Profil", icon: User },

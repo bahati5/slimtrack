@@ -5,6 +5,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
+import { useCoachHomeHref } from "@/components/shared/coach-home-context";
+import { firstName } from "@/lib/utils/format";
 import { ChevronLeft } from "lucide-react";
 
 type Row = {
@@ -20,11 +22,36 @@ type Row = {
 export default function NotificationsPage() {
   const supabase = useMemo(() => createClient(), []);
   const qc = useQueryClient();
+  const coachHomeHref = useCoachHomeHref();
+  const backHref = coachHomeHref ?? "/today";
   const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => setUserId(user?.id ?? null));
   }, [supabase]);
+
+  const { data: coachFullName } = useQuery({
+    queryKey: ["coach-name-for-notifs", userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { data: p } = await supabase
+        .from("profiles")
+        .select("coach_id")
+        .eq("id", userId!)
+        .maybeSingle();
+      // @ts-expect-error supabase types not generated
+      const cid = p?.coach_id as string | null | undefined;
+      if (!cid) return null;
+      const { data: c } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", cid)
+        .maybeSingle();
+      return (c?.full_name as string | null) ?? null;
+    },
+  });
+
+  const coachFn = firstName(coachFullName ?? undefined);
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["notifications", userId],
@@ -58,7 +85,7 @@ export default function NotificationsPage() {
     <div className="space-y-4 p-5">
       <header className="flex items-center gap-3">
         <Link
-          href="/today"
+          href={backHref}
           className="flex size-10 items-center justify-center rounded-xl text-[var(--color-text)] hover:bg-[var(--color-card-soft)]"
           aria-label="Retour"
         >
@@ -67,7 +94,9 @@ export default function NotificationsPage() {
         <div>
           <h1 className="text-2xl font-bold">Notifications</h1>
           <p className="text-sm text-[var(--color-muted)]">
-            Commentaires, repas enregistrés et messages de ta coach.
+            {coachFn
+              ? `Commentaires, repas enregistrés et messages de ${coachFn}.`
+              : "Commentaires, repas enregistrés et alertes sur ton suivi."}
           </p>
         </div>
       </header>
@@ -78,7 +107,9 @@ export default function NotificationsPage() {
         <Card>
           <CardTitle>Rien pour l&apos;instant</CardTitle>
           <CardDescription>
-            Tu seras notifié(e) ici quand ta coach ou tes données bougent.
+            {coachFn
+              ? `Tu seras notifié(e) ici quand ${coachFn} te contacte ou que tes données bougent.`
+              : "Tu seras notifié(e) ici quand ton suivi ou tes données bougent."}
           </CardDescription>
         </Card>
       ) : (

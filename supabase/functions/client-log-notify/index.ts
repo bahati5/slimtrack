@@ -28,7 +28,8 @@ const VAPID_PUBLIC = Deno.env.get("VAPID_PUBLIC_KEY")!;
 // @ts-expect-error deno env
 const VAPID_PRIVATE = Deno.env.get("VAPID_PRIVATE_KEY")!;
 // @ts-expect-error deno env
-const VAPID_SUBJECT = Deno.env.get("VAPID_SUBJECT") ?? "mailto:admin@slimtrack.app";
+const VAPID_SUBJECT =
+  Deno.env.get("VAPID_SUBJECT") ?? "mailto:admin@slimtrack.app";
 
 webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE);
 
@@ -54,7 +55,8 @@ serve(async (req: Request) => {
   const { user_id, log_date, status, total_kcal_eaten } = payload?.record ?? {};
 
   // Le trigger SQL n’appelle cette fonction que si repas/activité/statut ont changé
-  if (!user_id || status === "empty") return new Response("noop", { status: 200 });
+  if (!user_id || status === "empty")
+    return new Response("noop", { status: 200 });
 
   const sb = createClient(SUPABASE_URL, SERVICE_KEY);
 
@@ -84,12 +86,11 @@ serve(async (req: Request) => {
   const pushBody = JSON.stringify({ title, body, url: linkUrl });
 
   await Promise.allSettled(
-    (subs ?? []).map(
-      (s: { endpoint: string; p256dh: string; auth: string }) =>
-        webpush.sendNotification(
-          { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
-          pushBody,
-        ),
+    (subs ?? []).map((s: { endpoint: string; p256dh: string; auth: string }) =>
+      webpush.sendNotification(
+        { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
+        pushBody,
+      ),
     ),
   );
 

@@ -27,7 +27,8 @@ const VAPID_PUBLIC = Deno.env.get("VAPID_PUBLIC_KEY")!;
 // @ts-expect-error deno env
 const VAPID_PRIVATE = Deno.env.get("VAPID_PRIVATE_KEY")!;
 // @ts-expect-error deno env
-const VAPID_SUBJECT = Deno.env.get("VAPID_SUBJECT") ?? "mailto:admin@slimtrack.app";
+const VAPID_SUBJECT =
+  Deno.env.get("VAPID_SUBJECT") ?? "mailto:admin@slimtrack.app";
 
 webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE);
 
@@ -57,8 +58,29 @@ serve(async (req: Request) => {
       ? `/today?date=${encodeURIComponent(logDate.slice(0, 10))}`
       : "/today";
 
+  const { data: clientProfile } = await sb
+    .from("profiles")
+    .select("coach_id")
+    .eq("id", userId)
+    .maybeSingle();
+
+  const coachId = clientProfile?.coach_id as string | null | undefined;
+  let title = "Commentaire sur ton journal";
+  if (coachId) {
+    const { data: coach } = await sb
+      .from("profiles")
+      .select("full_name")
+      .eq("id", coachId)
+      .maybeSingle();
+    const raw = (coach?.full_name as string | null | undefined)?.trim();
+    if (raw) {
+      const first = raw.split(/\s+/)[0] ?? raw;
+      title = `${first} a laissé un commentaire`;
+    }
+  }
+
   const body = JSON.stringify({
-    title: "Ta coach a laissé un commentaire",
+    title,
     body: comment.slice(0, 140),
     url: linkUrl,
   });
@@ -75,7 +97,7 @@ serve(async (req: Request) => {
   await sb.from("notifications").insert({
     user_id: userId,
     type: "coach_comment",
-    title: "Ta coach a laissé un commentaire",
+    title,
     body: comment.slice(0, 140),
     link_url: linkUrl,
   });

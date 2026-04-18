@@ -4,6 +4,7 @@ import { MeasurementsForm } from "./measurements-form";
 import { LogoutButton } from "./logout-button";
 import { CoachModeCard } from "./coach-mode-card";
 import { InviteCodeCard } from "@/components/shared/invite-code-card";
+import { LeaveCoachButton } from "@/components/profile/leave-coach-button";
 
 export const dynamic = "force-dynamic";
 
@@ -59,6 +60,10 @@ export default async function ProfilePage() {
         initialCode={profile?.invite_code ?? null}
         coachName={coachName}
       />
+
+      {profile?.coach_id ? (
+        <LeaveCoachButton coachName={coachName} />
+      ) : null}
 
       <ProfileForm
         initial={{

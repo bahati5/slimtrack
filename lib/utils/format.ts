@@ -1,3 +1,10 @@
+/** Premier prénom / mot du nom affiché (ex. « Marie Dupont » → « Marie »). */
+export function firstName(fullName: string | null | undefined): string | null {
+  const n = fullName?.trim();
+  if (!n) return null;
+  return n.split(/\s+/)[0] ?? null;
+}
+
 export function formatKcal(value: number | null | undefined): string {
   if (value == null || Number.isNaN(value)) return "—";
   return `${Math.round(value).toLocaleString("fr-FR")} kcal`;

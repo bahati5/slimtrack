@@ -1,5 +1,8 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Apple } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { AdminUsersView } from "./users-view";
 
 export const dynamic = "force-dynamic";
@@ -41,6 +44,24 @@ export default async function AdminPage() {
           Gère les rôles et assignations coach de toutes les utilisatrices.
         </p>
       </header>
+
+      <Link href="/admin/foods" className="block">
+        <Card className="transition hover:border-[var(--color-primary)]/35">
+          <div className="flex items-start gap-3">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[var(--color-card-soft)]">
+              <Apple className="size-5 text-[var(--color-primary-soft)]" />
+            </div>
+            <div>
+              <CardTitle className="text-base">Base aliments</CardTitle>
+              <CardDescription>
+                Éditer la table food_database : macros, catégories, ajouts et
+                suppressions.
+              </CardDescription>
+            </div>
+          </div>
+        </Card>
+      </Link>
+
       <AdminUsersView users={users ?? []} coaches={coaches} meId={user.id} />
     </div>
   );

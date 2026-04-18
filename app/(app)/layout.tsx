@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import type { ReactNode } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { BottomNav } from "@/components/shared/bottom-nav";
 import { NotificationsBell } from "@/components/shared/notifications-bell";
+import { CoachHomeProvider } from "@/components/shared/coach-home-context";
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const supabase = await createClient();
@@ -32,16 +33,22 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     redirect("/onboarding");
   }
 
+  const isCoachOrAdmin =
+    profile?.role === "coach" || profile?.role === "admin";
+  const cookieStore = await cookies();
+  const coachClientId = cookieStore.get("coach_active_client")?.value;
+  const coachHomeHref =
+    isCoachOrAdmin && coachClientId ? `/coach/${coachClientId}` : null;
+
   return (
-    <div className="relative mx-auto flex min-h-dvh w-full max-w-lg flex-col pb-24 safe-top">
-      {!isOnboarding && <NotificationsBell />}
-      <main className="flex-1">{children}</main>
-      {!isOnboarding && (
-        <BottomNav
-          isCoach={profile?.role === "coach" || profile?.role === "admin"}
-          isAdmin={profile?.role === "admin"}
-        />
-      )}
-    </div>
+    <CoachHomeProvider coachHomeHref={coachHomeHref}>
+      <div className="relative mx-auto flex min-h-dvh w-full max-w-lg flex-col pb-24 safe-top">
+        {!isOnboarding && <NotificationsBell />}
+        <main className="flex-1">{children}</main>
+        {!isOnboarding && (
+          <BottomNav isCoach={isCoachOrAdmin} isAdmin={profile?.role === "admin"} />
+        )}
+      </div>
+    </CoachHomeProvider>
   );
 }

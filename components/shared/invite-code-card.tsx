@@ -34,7 +34,9 @@ export function InviteCodeCard({
   async function rotate() {
     if (
       !confirm(
-        "Générer un nouveau code ? L'ancien ne fonctionnera plus (ton coach actuel reste assigné).",
+        coachName
+          ? `Générer un nouveau code ? L'ancien ne fonctionnera plus (ton affiliation avec ${coachName} reste inchangée).`
+          : "Générer un nouveau code ? L'ancien ne fonctionnera plus (ton affiliation actuelle reste la même).",
       )
     )
       return;
@@ -61,7 +63,7 @@ export function InviteCodeCard({
           <CardDescription>
             {coachName
               ? `Coach actuel : ${coachName}`
-              : "Partage ce code avec ton coach pour vous affilier."}
+              : "Partage ce code avec la personne qui te suit pour vous affilier."}
           </CardDescription>
         </div>
       </div>
@@ -74,8 +76,7 @@ export function InviteCodeCard({
           variant="secondary"
           size="icon"
           onClick={copy}
-          aria-label="Copier"
-        >
+          aria-label="Copier">
           {copied ? (
             <Check className="size-5 text-[var(--color-success)]" />
           ) : (
@@ -87,8 +88,7 @@ export function InviteCodeCard({
           size="icon"
           onClick={rotate}
           loading={rotating}
-          aria-label="Régénérer"
-        >
+          aria-label="Régénérer">
           <RefreshCw className="size-5" />
         </Button>
       </div>

@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ClaimClientForm } from "./claim-client-form";
+import { UnlinkClientButton } from "@/components/coach/unlink-client-button";
 
 export const dynamic = "force-dynamic";
 
@@ -73,14 +74,16 @@ export default async function CoachPage() {
         const k = compliance[c.id];
         const pct = k?.total ? Math.round((k.ok / k.total) * 100) : 0;
         return (
-          <Link
+          <Card
             key={c.id}
-            href={`/coach/${c.id}`}
-            className="block"
+            className="flex items-center gap-1 p-2 pr-1 transition hover:border-[var(--color-primary)]"
           >
-            <Card className="flex items-center gap-3 transition hover:border-[var(--color-primary)]">
-              <div className="size-12 rounded-full bg-gradient-primary" />
-              <div className="flex-1">
+            <Link
+              href={`/coach/${c.id}`}
+              className="flex min-w-0 flex-1 items-center gap-3 p-1"
+            >
+              <div className="size-12 shrink-0 rounded-full bg-gradient-primary" />
+              <div className="min-w-0 flex-1">
                 <div className="font-medium">{c.full_name ?? "Sans nom"}</div>
                 <div className="text-xs text-[var(--color-muted)]">
                   Poids : {c.current_weight_kg ?? "—"} kg
@@ -92,8 +95,9 @@ export default async function CoachPage() {
               >
                 {pct}% 7j
               </Badge>
-            </Card>
-          </Link>
+            </Link>
+            <UnlinkClientButton clientId={c.id} clientName={c.full_name} />
+          </Card>
         );
       })}
     </div>

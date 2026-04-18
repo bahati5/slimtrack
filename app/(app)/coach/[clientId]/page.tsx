@@ -1,7 +1,10 @@
 import { Suspense } from "react";
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import { ChevronLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { todayIso } from "@/lib/utils/format";
+import { UnlinkClientButton } from "@/components/coach/unlink-client-button";
 import { TodayView } from "../../today/today-view";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +23,7 @@ export default async function CoachClientPage({
 
   const { data: me } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, full_name")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -48,16 +51,28 @@ export default async function CoachClientPage({
     "Cliente";
 
   return (
-    <Suspense>
-      <TodayView
-        userId={user.id}
-        targetUserId={clientId}
-        profile={client}
-        readonly
-        titleOverride={title}
-        basePath={`/coach/${clientId}`}
-        serverToday={serverToday}
-      />
-    </Suspense>
+    <>
+      <div className="flex items-center justify-between gap-2 px-5 pt-4">
+        <Link
+          href="/coach"
+          className="inline-flex items-center gap-1 text-sm text-[var(--color-muted)] hover:text-[var(--color-text)]"
+        >
+          <ChevronLeft className="size-4" /> Clientes
+        </Link>
+        <UnlinkClientButton clientId={clientId} clientName={client.full_name} />
+      </div>
+      <Suspense>
+        <TodayView
+          userId={user.id}
+          targetUserId={clientId}
+          profile={client}
+          readonly
+          titleOverride={title}
+          basePath={`/coach/${clientId}`}
+          serverToday={serverToday}
+          coachDisplayName={me?.full_name ?? null}
+        />
+      </Suspense>
+    </>
   );
 }

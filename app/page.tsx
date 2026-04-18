@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function Home() {
@@ -16,6 +17,10 @@ export default async function Home() {
 
   // @ts-expect-error supabase types not generated
   if (profile?.role === "coach" || profile?.role === "admin") {
+    const coachClientId = (await cookies()).get("coach_active_client")?.value;
+    if (coachClientId) {
+      redirect(`/coach/${coachClientId}`);
+    }
     redirect("/coach");
   }
   redirect("/today");

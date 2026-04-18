@@ -36,6 +36,12 @@ export default async function MealDetailPage({
     .maybeSingle();
   if (!meal) notFound();
 
+  const { data: viewerProfile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle();
+
   const { data: items } = await supabase
     .from("meal_items")
     .select("id, food_name, quantity_g, kcal_total, protein_g, carbs_g, fat_g")
@@ -63,10 +69,18 @@ export default async function MealDetailPage({
   // @ts-expect-error
   const mealUserId: string = meal.user_id;
 
+  // @ts-expect-error supabase types not generated
+  const viewerRole = viewerProfile?.role as string | undefined;
+  const isCoachOrAdmin = viewerRole === "coach" || viewerRole === "admin";
+  const backHref =
+    isCoachOrAdmin && mealUserId !== user.id
+      ? `/coach/${mealUserId}`
+      : "/today";
+
   return (
     <div className="space-y-4 p-5 pb-8">
       <Link
-        href="/today"
+        href={backHref}
         className="inline-flex items-center gap-1 text-sm text-[var(--color-muted)] hover:text-[var(--color-text)]"
       >
         <ChevronLeft className="size-4" /> Retour

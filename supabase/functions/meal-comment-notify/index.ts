@@ -25,7 +25,8 @@ const VAPID_PUBLIC = Deno.env.get("VAPID_PUBLIC_KEY")!;
 // @ts-expect-error deno env
 const VAPID_PRIVATE = Deno.env.get("VAPID_PRIVATE_KEY")!;
 // @ts-expect-error deno env
-const VAPID_SUBJECT = Deno.env.get("VAPID_SUBJECT") ?? "mailto:admin@slimtrack.app";
+const VAPID_SUBJECT =
+  Deno.env.get("VAPID_SUBJECT") ?? "mailto:admin@slimtrack.app";
 
 webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE);
 
@@ -75,7 +76,15 @@ serve(async (req: Request) => {
     title = `${ownerName} a commenté son repas`;
   } else {
     targetUserId = mealOwnerId;
-    title = "Ta coach a commenté ton repas";
+    const { data: authorProfile } = await sb
+      .from("profiles")
+      .select("full_name")
+      .eq("id", author_id)
+      .maybeSingle();
+    const raw = (authorProfile?.full_name as string | null | undefined)?.trim();
+    title = raw
+      ? `${raw.split(/\s+/)[0] ?? raw} a commenté ton repas`
+      : "Commentaire sur ton repas";
   }
 
   const { data: subs } = await sb

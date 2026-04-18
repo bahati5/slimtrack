@@ -69,6 +69,19 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Dernière cliente ouverte par le coach — utilisée pour l’accueil / retours.
+  const coachClientMatch = pathname.match(
+    /^\/coach\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\/?$/i,
+  );
+  if (coachClientMatch && user) {
+    response.cookies.set("coach_active_client", coachClientMatch[1], {
+      path: "/",
+      maxAge: 60 * 60 * 24 * 90,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+    });
+  }
+
   // Route coach: le check fin du rôle est fait dans app/(app)/coach/layout.tsx.
   return response;
 }

@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "SlimTrack — Suivi de perte de poids",
     short_name: "SlimTrack",
     description:
-      "Suis ta perte de poids avec repas détaillés, activités sportives et coach.",
+      "Suis ta perte de poids avec repas détaillés, activités sportives et un accompagnement personnalisé.",
     start_url: "/today",
     scope: "/",
     display: "standalone",
