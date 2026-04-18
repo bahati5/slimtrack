@@ -8,6 +8,7 @@ import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { useCoachHomeHref } from "@/components/shared/coach-home-context";
 import { firstName } from "@/lib/utils/format";
 import { ChevronLeft } from "lucide-react";
+import { ListPageSkeleton } from "@/components/shared/app-page-skeleton";
 
 type Row = {
   id: string;
@@ -101,8 +102,8 @@ export default function NotificationsPage() {
         </div>
       </header>
 
-      {isLoading ? (
-        <p className="text-sm text-[var(--color-muted)]">Chargement…</p>
+      {!userId || isLoading ? (
+        <ListPageSkeleton rows={5} />
       ) : rows.length === 0 ? (
         <Card>
           <CardTitle>Rien pour l&apos;instant</CardTitle>

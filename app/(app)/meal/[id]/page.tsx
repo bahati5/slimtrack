@@ -7,6 +7,7 @@ import { Card, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatKcal, todayHrefAfterLog, todayIso } from "@/lib/utils/format";
 import { MealComments } from "./comments";
+import { DeleteMealButton } from "./delete-meal-button";
 
 export const dynamic = "force-dynamic";
 
@@ -97,12 +98,15 @@ export default async function MealDetailPage({
           <ChevronLeft className="size-4" /> Retour
         </Link>
         {isOwner ? (
-          <Link
-            href={editMealHref}
-            className="text-sm font-semibold text-[var(--color-primary-soft)] hover:underline"
-          >
-            Modifier le repas
-          </Link>
+          <>
+            <Link
+              href={editMealHref}
+              className="text-sm font-semibold text-[var(--color-primary-soft)] hover:underline"
+            >
+              Modifier le repas
+            </Link>
+            <DeleteMealButton mealId={id} afterDeleteHref={backHref} />
+          </>
         ) : null}
       </div>
 

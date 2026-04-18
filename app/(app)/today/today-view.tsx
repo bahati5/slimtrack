@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { KcalRing } from "@/components/daily/kcal-ring";
 import { MonthCalendar } from "@/components/daily/month-calendar";
 import { Fab } from "@/components/shared/fab";
+import { TodayContentSkeleton } from "@/components/shared/app-page-skeleton";
 import { CoachDailyCommentForm } from "@/components/coach/coach-daily-comment-form";
 import { firstName, formatKcal } from "@/lib/utils/format";
 import {
@@ -344,8 +345,8 @@ export function TodayView({
           serverToday={today}
           onSelectDate={selectDateFromCalendar}
         />
-      ) : readonly && isLoading ? (
-        <TodayReadonlySkeleton />
+      ) : isLoading ? (
+        <TodayContentSkeleton />
       ) : (
         <>
           {/* Anneau kcal */}
@@ -461,11 +462,6 @@ export function TodayView({
             )}
           </Section>
 
-          {!readonly && isLoading ? (
-            <div className="text-center text-xs text-[var(--color-muted)]">
-              Chargement…
-            </div>
-          ) : null}
         </>
       )}
 
@@ -487,37 +483,6 @@ export function TodayView({
       ) : null}
 
       {!readonly && <Fab dateQuery={fabDateQuery} />}
-    </div>
-  );
-}
-
-function TodayReadonlySkeleton() {
-  return (
-    <div
-      className="animate-pulse space-y-4"
-      aria-busy="true"
-      aria-label="Chargement des données">
-      <Card className="flex flex-col items-center gap-4 py-8">
-        <div className="aspect-square w-[min(18rem,80vw)] max-h-72 rounded-full bg-[var(--color-card-soft)]" />
-        <div className="grid w-full grid-cols-3 gap-3">
-          {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="h-24 rounded-2xl bg-[var(--color-card-soft)]"
-            />
-          ))}
-        </div>
-        <div className="mx-auto h-4 w-48 rounded bg-[var(--color-card-soft)]" />
-      </Card>
-      <section className="space-y-2">
-        <div className="h-5 w-16 rounded bg-[var(--color-card-soft)]" />
-        <div className="h-20 rounded-2xl bg-[var(--color-card-soft)]" />
-        <div className="h-20 rounded-2xl bg-[var(--color-card-soft)]" />
-      </section>
-      <section className="space-y-2">
-        <div className="h-5 w-24 rounded bg-[var(--color-card-soft)]" />
-        <div className="h-20 rounded-2xl bg-[var(--color-card-soft)]" />
-      </section>
     </div>
   );
 }

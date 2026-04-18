@@ -116,7 +116,12 @@ export function MonthCalendar({
         ))}
       </div>
 
-      <div className="grid grid-cols-7 gap-1">
+      <div
+        className={cn(
+          "grid grid-cols-7 gap-1",
+          isLoading && "pointer-events-none animate-pulse opacity-70",
+        )}
+        aria-busy={isLoading}>
         {days.map((day) => {
           const dayIso = format(day, "yyyy-MM-dd");
           const row = logsByDate[dayIso];
@@ -156,12 +161,6 @@ export function MonthCalendar({
           );
         })}
       </div>
-
-      {isLoading ? (
-        <p className="text-center text-xs text-[var(--color-muted)]">
-          Chargement du calendrier…
-        </p>
-      ) : null}
     </Card>
   );
 }

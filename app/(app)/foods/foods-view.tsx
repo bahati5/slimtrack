@@ -8,6 +8,7 @@ import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
+import { ListPageSkeleton } from "@/components/shared/app-page-skeleton";
 import { useToast } from "@/components/ui/toast";
 import {
   Search,
@@ -236,9 +237,7 @@ export function FoodsView({
 
       {/* Liste */}
       {loading ? (
-        <div className="py-10 text-center text-sm text-[var(--color-muted)]">
-          Chargement…
-        </div>
+        <ListPageSkeleton rows={6} />
       ) : filtered.length === 0 ? (
         <Card className="border-dashed">
           <CardTitle>Aucun résultat</CardTitle>

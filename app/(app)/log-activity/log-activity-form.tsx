@@ -16,6 +16,7 @@ import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/components/ui/toast";
 import { MediaUploader } from "@/components/shared/media-uploader";
 import { formatKcal, todayHrefAfterLog, todayIso } from "@/lib/utils/format";
+import { FormPageSkeleton } from "@/components/shared/app-page-skeleton";
 import {
   Play,
   Dumbbell,
@@ -296,11 +297,7 @@ export function LogActivityForm({
   }
 
   if (loadingEdit) {
-    return (
-      <div className="py-12 text-center text-sm text-[var(--color-muted)]">
-        Chargement de l&apos;activité…
-      </div>
-    );
+    return <FormPageSkeleton />;
   }
 
   return (

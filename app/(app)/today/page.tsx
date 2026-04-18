@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { TodayContentSkeleton } from "@/components/shared/app-page-skeleton";
 import { todayIso } from "@/lib/utils/format";
 import { TodayView } from "./today-view";
 
@@ -47,7 +48,12 @@ export default async function TodayPage() {
   }
 
   return (
-    <Suspense>
+    <Suspense
+      fallback={
+        <div className="space-y-4 p-5 pb-40 max-[380px]:pb-44">
+          <TodayContentSkeleton />
+        </div>
+      }>
       <TodayView
         userId={user.id}
         profile={profile ?? null}

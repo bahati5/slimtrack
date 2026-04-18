@@ -16,6 +16,7 @@ import {
 } from "@/components/shared/food-search-input";
 import { MediaUploader } from "@/components/shared/media-uploader";
 import { formatKcal, todayHrefAfterLog, todayIso } from "@/lib/utils/format";
+import { FormPageSkeleton } from "@/components/shared/app-page-skeleton";
 
 const MEAL_TYPES = [
   { value: "breakfast", label: "Petit-déj" },
@@ -328,11 +329,7 @@ export function LogMealForm({ userId: _userId }: { userId: string }) {
   }
 
   if (loadingEdit) {
-    return (
-      <div className="py-12 text-center text-sm text-[var(--color-muted)]">
-        Chargement du repas…
-      </div>
-    );
+    return <FormPageSkeleton />;
   }
 
   return (
