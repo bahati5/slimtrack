@@ -54,3 +54,15 @@ export function computeTdee(input: TdeeInput): TdeeResult {
     weeklyLossKg: Math.round(weeklyLossKg * 100) / 100,
   };
 }
+
+/**
+ * Déficit à enregistrer quand l’utilisateur choisit directement un objectif kcal/j
+ * (TDEE − cible), borné pour coller au schéma et au slider (0–1500).
+ */
+export function deficitFromManualTarget(
+  tdeeRounded: number,
+  desiredTargetKcal: number,
+): number {
+  const raw = Math.round(tdeeRounded - desiredTargetKcal);
+  return Math.min(1500, Math.max(0, raw));
+}

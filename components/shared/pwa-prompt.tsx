@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Download, Bell, X } from "lucide-react";
+import { Download, Bell, X, Share, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { firstName } from "@/lib/utils/format";
@@ -10,7 +10,25 @@ import {
   subscribeForPush,
 } from "@/lib/hooks/use-push-subscription";
 
-type Step = "install" | "notify" | null;
+type Step = "install" | "install-ios" | "notify" | null;
+
+function detectIos(): boolean {
+  if (typeof window === "undefined") return false;
+  const ua = window.navigator.userAgent;
+  // iPhone/iPad/iPod — inclut iPadOS 13+ qui se prétend Mac mais a du touch
+  return (
+    /iphone|ipad|ipod/i.test(ua) ||
+    (/macintosh/i.test(ua) && "ontouchend" in document)
+  );
+}
+
+function detectIosSafari(): boolean {
+  if (!detectIos()) return false;
+  const ua = window.navigator.userAgent;
+  // Exclure les navigateurs tiers sur iOS (Chrome=CriOS, Firefox=FxiOS, Edge=EdgiOS)
+  // qui ne peuvent pas installer la PWA — seul Safari iOS le peut.
+  return !/crios|fxios|edgios|opios/i.test(ua);
+}
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -38,8 +56,7 @@ export function PwaPrompt() {
         .select("coach_id")
         .eq("id", user.id)
         .maybeSingle();
-      // @ts-expect-error supabase types not generated
-      const cid = p?.coach_id as string | null | undefined;
+      const cid = (p as { coach_id?: string | null } | null)?.coach_id ?? null;
       if (!cid) return;
       const { data: c } = await supabase
         .from("profiles")
@@ -76,16 +93,25 @@ export function PwaPrompt() {
 
     window.addEventListener("beforeinstallprompt", handler);
 
-    // Si déjà installé mais notifs pas accordées, montrer le prompt notif directement
-    if (isStandalone && !notifGranted) {
-      const t = setTimeout(() => setStep("notify"), 3000);
-      return () => {
-        window.removeEventListener("beforeinstallprompt", handler);
-        clearTimeout(t);
-      };
+    // iOS Safari ne fire jamais beforeinstallprompt → on affiche nos propres
+    // instructions (Partager → Sur l'écran d'accueil) après un petit délai.
+    const iosSafari = detectIosSafari();
+    let iosTimer: ReturnType<typeof setTimeout> | null = null;
+    if (!isStandalone && iosSafari) {
+      iosTimer = setTimeout(() => setStep("install-ios"), 2500);
     }
 
-    return () => window.removeEventListener("beforeinstallprompt", handler);
+    // Si déjà installé mais notifs pas accordées, montrer le prompt notif directement
+    let notifTimer: ReturnType<typeof setTimeout> | null = null;
+    if (isStandalone && !notifGranted) {
+      notifTimer = setTimeout(() => setStep("notify"), 3000);
+    }
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handler);
+      if (iosTimer) clearTimeout(iosTimer);
+      if (notifTimer) clearTimeout(notifTimer);
+    };
   }, []);
 
   function dismiss() {
@@ -155,6 +181,51 @@ export function PwaPrompt() {
                 Plus tard
               </Button>
             </div>
+          </>
+        )}
+
+        {step === "install-ios" && (
+          <>
+            <div className="mb-3 flex items-center gap-3">
+              <div className="flex size-10 items-center justify-center rounded-xl bg-gradient-primary">
+                <Download className="size-5 on-warm" />
+              </div>
+              <div>
+                <p className="font-semibold text-[var(--color-text)]">
+                  Installer SlimTrack
+                </p>
+                <p className="text-xs text-[var(--color-muted)]">
+                  Ajoute l&apos;app à ton écran d&apos;accueil
+                </p>
+              </div>
+            </div>
+            <ol className="mb-3 space-y-2 text-sm text-[var(--color-text)]">
+              <li className="flex items-center gap-2">
+                <span className="flex size-6 items-center justify-center rounded-full bg-[var(--color-card-soft)] text-xs font-bold">
+                  1
+                </span>
+                <span className="flex items-center gap-1">
+                  Appuie sur
+                  <Share className="size-4 text-[var(--color-primary-soft)]" />
+                  <span className="font-medium">Partager</span>
+                </span>
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="flex size-6 items-center justify-center rounded-full bg-[var(--color-card-soft)] text-xs font-bold">
+                  2
+                </span>
+                <span className="flex items-center gap-1">
+                  Puis
+                  <Plus className="size-4 text-[var(--color-primary-soft)]" />
+                  <span className="font-medium">
+                    Sur l&apos;écran d&apos;accueil
+                  </span>
+                </span>
+              </li>
+            </ol>
+            <Button size="sm" variant="ghost" block onClick={dismiss}>
+              J&apos;ai compris
+            </Button>
           </>
         )}
 

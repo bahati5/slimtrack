@@ -42,7 +42,11 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <CoachHomeProvider coachHomeHref={coachHomeHref}>
-      <div className="relative mx-auto flex min-h-dvh w-full max-w-lg flex-col pb-24 safe-top">
+      <div
+        className={`relative mx-auto flex min-h-dvh w-full max-w-lg flex-col safe-top ${
+          isOnboarding ? "" : "pb-24"
+        }`}
+      >
         {!isOnboarding && <NotificationsBell />}
         <main className="flex-1">{children}</main>
         {!isOnboarding && (

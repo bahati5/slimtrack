@@ -1,61 +1,82 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input, Label } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
+import { todayIso } from "@/lib/utils/format";
 import { Ruler } from "lucide-react";
-
-interface LastMeasurements {
-  waist_cm: number | null;
-  hips_cm: number | null;
-  chest_cm: number | null;
-  left_arm_cm: number | null;
-  right_arm_cm: number | null;
-  left_thigh_cm: number | null;
-  right_thigh_cm: number | null;
-}
 
 type NumField = number | "";
 
-export function MeasurementsForm({
-  last,
-}: {
-  last: LastMeasurements | null;
-}) {
+export function MeasurementsForm({ timezone }: { timezone: string | null }) {
   const toast = useToast();
+  const router = useRouter();
   const [saving, setSaving] = useState(false);
+  const [loadingRow, setLoadingRow] = useState(true);
+  const [measuredDate, setMeasuredDate] = useState(() => todayIso(timezone));
 
-  const [waist, setWaist] = useState<NumField>(last?.waist_cm ?? "");
-  const [hips, setHips] = useState<NumField>(last?.hips_cm ?? "");
-  const [chest, setChest] = useState<NumField>(last?.chest_cm ?? "");
-  const [leftArm, setLeftArm] = useState<NumField>(last?.left_arm_cm ?? "");
-  const [rightArm, setRightArm] = useState<NumField>(last?.right_arm_cm ?? "");
-  const [leftThigh, setLeftThigh] = useState<NumField>(last?.left_thigh_cm ?? "");
-  const [rightThigh, setRightThigh] = useState<NumField>(last?.right_thigh_cm ?? "");
+  const [waist, setWaist] = useState<NumField>("");
+  const [hips, setHips] = useState<NumField>("");
+  const [chest, setChest] = useState<NumField>("");
+  const [leftArm, setLeftArm] = useState<NumField>("");
+  const [rightArm, setRightArm] = useState<NumField>("");
+  const [leftThigh, setLeftThigh] = useState<NumField>("");
+  const [rightThigh, setRightThigh] = useState<NumField>("");
 
   function num(v: NumField) {
     return v === "" ? null : Number(v);
   }
-  function hasChanged() {
-    return (
-      num(waist) !== last?.waist_cm ||
-      num(hips) !== last?.hips_cm ||
-      num(chest) !== last?.chest_cm ||
-      num(leftArm) !== last?.left_arm_cm ||
-      num(rightArm) !== last?.right_arm_cm ||
-      num(leftThigh) !== last?.left_thigh_cm ||
-      num(rightThigh) !== last?.right_thigh_cm
-    );
-  }
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoadingRow(true);
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        setLoadingRow(false);
+        return;
+      }
+      const { data } = await supabase
+        .from("measurements")
+        .select(
+          "waist_cm, hips_cm, chest_cm, left_arm_cm, right_arm_cm, left_thigh_cm, right_thigh_cm",
+        )
+        .eq("user_id", user.id)
+        .eq("measured_at", measuredDate)
+        .maybeSingle();
+      if (cancelled) return;
+      if (data) {
+        setWaist(data.waist_cm ?? "");
+        setHips(data.hips_cm ?? "");
+        setChest(data.chest_cm ?? "");
+        setLeftArm(data.left_arm_cm ?? "");
+        setRightArm(data.right_arm_cm ?? "");
+        setLeftThigh(data.left_thigh_cm ?? "");
+        setRightThigh(data.right_thigh_cm ?? "");
+      } else {
+        setWaist("");
+        setHips("");
+        setChest("");
+        setLeftArm("");
+        setRightArm("");
+        setLeftThigh("");
+        setRightThigh("");
+      }
+      setLoadingRow(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [measuredDate]);
 
   async function save() {
-    if (!hasChanged()) {
-      toast.info("Aucune modification à enregistrer.");
-      return;
-    }
     setSaving(true);
     const supabase = createClient();
     const {
@@ -65,11 +86,10 @@ export function MeasurementsForm({
       setSaving(false);
       return;
     }
-    const today = new Date().toISOString().slice(0, 10);
     const { error } = await supabase.from("measurements").upsert(
       {
         user_id: user.id,
-        measured_at: today,
+        measured_at: measuredDate,
         waist_cm: num(waist),
         hips_cm: num(hips),
         chest_cm: num(chest),
@@ -86,6 +106,7 @@ export function MeasurementsForm({
       return;
     }
     toast.success("Mensurations enregistrées ✅");
+    router.refresh();
   }
 
   return (
@@ -97,24 +118,48 @@ export function MeasurementsForm({
         <div>
           <CardTitle>Mensurations</CardTitle>
           <CardDescription>
-            Sauvegardées avec la date du jour (cm).
+            Choisis la date (passée ou aujourd&apos;hui), puis remplis les tours
+            en cm.
           </CardDescription>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <MField label="Tour de taille" value={waist} onChange={setWaist} />
-        <MField label="Tour de hanches" value={hips} onChange={setHips} />
-        <MField label="Tour de poitrine" value={chest} onChange={setChest} />
-        <div /> {/* spacer */}
-        <MField label="Bras gauche" value={leftArm} onChange={setLeftArm} />
-        <MField label="Bras droit" value={rightArm} onChange={setRightArm} />
-        <MField label="Cuisse gauche" value={leftThigh} onChange={setLeftThigh} />
-        <MField label="Cuisse droite" value={rightThigh} onChange={setRightThigh} />
+      <div className="space-y-1.5">
+        <Label htmlFor="measure-date">Date de la mesure</Label>
+        <Input
+          id="measure-date"
+          type="date"
+          value={measuredDate}
+          max={todayIso(timezone)}
+          onChange={(e) => setMeasuredDate(e.target.value)}
+        />
       </div>
 
-      <Button block size="lg" loading={saving} onClick={save}>
-        Enregistrer les mensurations
+      {loadingRow ? (
+        <p className="text-sm text-[var(--color-muted)]">Chargement…</p>
+      ) : (
+        <div className="grid grid-cols-2 gap-3">
+          <MField label="Tour de taille" value={waist} onChange={setWaist} />
+          <MField label="Tour de hanches" value={hips} onChange={setHips} />
+          <MField label="Tour de poitrine" value={chest} onChange={setChest} />
+          <div />
+          <MField label="Bras gauche" value={leftArm} onChange={setLeftArm} />
+          <MField label="Bras droit" value={rightArm} onChange={setRightArm} />
+          <MField
+            label="Cuisse gauche"
+            value={leftThigh}
+            onChange={setLeftThigh}
+          />
+          <MField
+            label="Cuisse droite"
+            value={rightThigh}
+            onChange={setRightThigh}
+          />
+        </div>
+      )}
+
+      <Button block size="lg" loading={saving} disabled={loadingRow} onClick={save}>
+        Enregistrer pour cette date
       </Button>
     </Card>
   );

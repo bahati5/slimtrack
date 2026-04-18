@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { ProfileForm } from "./profile-form";
 import { MeasurementsForm } from "./measurements-form";
+import { WeightDateForm } from "./weight-date-form";
 import { LogoutButton } from "./logout-button";
 import { CoachModeCard } from "./coach-mode-card";
 import { InviteCodeCard } from "@/components/shared/invite-code-card";
@@ -19,17 +20,6 @@ export default async function ProfilePage() {
     .from("profiles")
     .select("*")
     .eq("id", user.id)
-    .maybeSingle();
-
-  // Dernières mensurations
-  const { data: lastMeasurement } = await supabase
-    .from("measurements")
-    .select(
-      "waist_cm, hips_cm, chest_cm, left_arm_cm, right_arm_cm, left_thigh_cm, right_thigh_cm",
-    )
-    .eq("user_id", user.id)
-    .order("measured_at", { ascending: false })
-    .limit(1)
     .maybeSingle();
 
   // Nom du coach si assigné
@@ -75,11 +65,14 @@ export default async function ProfilePage() {
           goal_weight_kg: profile?.goal_weight_kg ?? null,
           activity_level: profile?.activity_level ?? null,
           deficit_kcal: profile?.deficit_kcal ?? 500,
+          target_kcal: profile?.target_kcal ?? null,
           avatar_url: profile?.avatar_url ?? null,
         }}
       />
 
-      <MeasurementsForm last={lastMeasurement ?? null} />
+      <WeightDateForm timezone={profile?.timezone ?? null} />
+
+      <MeasurementsForm timezone={profile?.timezone ?? null} />
 
       <LogoutButton />
     </div>

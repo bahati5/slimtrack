@@ -136,7 +136,7 @@ export function OnboardingFlow({ initial }: { initial: Initial }) {
   })();
 
   return (
-    <div className="flex min-h-[100dvh] flex-col p-5">
+    <div className="flex min-h-[calc(100dvh-env(safe-area-inset-top))] flex-col px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-5">
       {/* Progress */}
       <ProgressBar step={step} total={STEPS.length} />
 

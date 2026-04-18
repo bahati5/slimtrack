@@ -3,7 +3,12 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { ACTIVITY_LEVELS, computeTdee, type Sex } from "@/lib/calculations/tdee";
+import {
+  ACTIVITY_LEVELS,
+  computeTdee,
+  deficitFromManualTarget,
+  type Sex,
+} from "@/lib/calculations/tdee";
 import { computeBmi } from "@/lib/calculations/bmi";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Input, Label } from "@/components/ui/input";
@@ -22,6 +27,8 @@ interface InitialProfile {
   goal_weight_kg: number | null;
   activity_level: number | null;
   deficit_kcal: number | null;
+  /** Objectif kcal/j issu du dernier calcul (trigger SQL). */
+  target_kcal: number | null;
   avatar_url: string | null;
 }
 
@@ -41,6 +48,11 @@ export function ProfileForm({ initial }: { initial: InitialProfile }) {
     initial.activity_level ?? 1.375,
   );
   const [deficit, setDeficit] = useState<number>(initial.deficit_kcal ?? 500);
+  /** Saisie directe de l’objectif kcal/j (mode « objectif »). */
+  const [manualTarget, setManualTarget] = useState<number>(
+    initial.target_kcal ?? 1800,
+  );
+  const [goalMode, setGoalMode] = useState<"deficit" | "target">("deficit");
   const [saving, setSaving] = useState(false);
 
   const tdee = useMemo(() => {
@@ -54,6 +66,24 @@ export function ProfileForm({ initial }: { initial: InitialProfile }) {
       deficitKcal: deficit,
     });
   }, [age, sex, height, weight, activity, deficit]);
+
+  const effectiveDeficit = useMemo(() => {
+    if (!tdee) return deficit;
+    if (goalMode === "deficit") return deficit;
+    return deficitFromManualTarget(tdee.tdee, manualTarget);
+  }, [goalMode, deficit, manualTarget, tdee]);
+
+  const tdeePreview = useMemo(() => {
+    if (!age || !height || !weight) return null;
+    return computeTdee({
+      age: Number(age),
+      sex,
+      heightCm: Number(height),
+      weightKg: Number(weight),
+      activityLevel: activity,
+      deficitKcal: effectiveDeficit,
+    });
+  }, [age, sex, height, weight, activity, effectiveDeficit]);
 
   const bmi = useMemo(() => {
     if (!height || !weight) return null;
@@ -75,7 +105,7 @@ export function ProfileForm({ initial }: { initial: InitialProfile }) {
         current_weight_kg: weight === "" ? null : Number(weight),
         goal_weight_kg: goal === "" ? null : Number(goal),
         activity_level: activity,
-        deficit_kcal: deficit,
+        deficit_kcal: effectiveDeficit,
       })
       .eq("id", user.user.id);
 
@@ -108,16 +138,41 @@ export function ProfileForm({ initial }: { initial: InitialProfile }) {
       <Card className="bg-gradient-to-br from-[var(--color-primary)]/20 to-[var(--color-accent)]/20 border-[var(--color-primary)]/30">
         <CardTitle>Objectif calorique</CardTitle>
         <CardDescription>Calculé en temps réel (Mifflin-St Jeor)</CardDescription>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setGoalMode("deficit")}
+            className={`rounded-full px-4 py-1.5 text-xs font-medium ${
+              goalMode === "deficit"
+                ? "bg-gradient-primary text-white"
+                : "bg-[var(--color-card)] text-[var(--color-muted)]"
+            }`}>
+            Par déficit
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setGoalMode("target");
+              if (tdee) setManualTarget(tdee.target);
+            }}
+            className={`rounded-full px-4 py-1.5 text-xs font-medium ${
+              goalMode === "target"
+                ? "bg-gradient-primary text-white"
+                : "bg-[var(--color-card)] text-[var(--color-muted)]"
+            }`}>
+            Objectif kcal/j
+          </button>
+        </div>
         <div className="mt-3 grid grid-cols-2 gap-3">
-          <Stat label="TDEE" value={tdee ? `${tdee.tdee} kcal` : "—"} />
+          <Stat label="TDEE" value={tdeePreview ? `${tdeePreview.tdee} kcal` : "—"} />
           <Stat
             label="Objectif"
-            value={tdee ? `${tdee.target} kcal` : "—"}
+            value={tdeePreview ? `${tdeePreview.target} kcal` : "—"}
             highlight
           />
           <Stat
             label="Perte estimée"
-            value={tdee ? `${tdee.weeklyLossKg} kg/sem` : "—"}
+            value={tdeePreview ? `${tdeePreview.weeklyLossKg} kg/sem` : "—"}
           />
           <Stat
             label="IMC"
@@ -133,6 +188,29 @@ export function ProfileForm({ initial }: { initial: InitialProfile }) {
             }
           />
         </div>
+        {goalMode === "target" && tdee ? (
+          <div className="mt-4 space-y-2 rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)]/80 p-3">
+            <Label htmlFor="manual-target">
+              Combien de kcal veux-tu manger par jour ?
+            </Label>
+            <Input
+              id="manual-target"
+              type="number"
+              inputMode="numeric"
+              min={Math.max(800, tdee.tdee - 1500)}
+              max={tdee.tdee}
+              value={manualTarget}
+              onChange={(e) => setManualTarget(Number(e.target.value) || 0)}
+            />
+            <p className="text-xs text-[var(--color-muted)]">
+              Entre {Math.max(800, tdee.tdee - 1500)} et {tdee.tdee} kcal (ton
+              TDEE). Déficit calculé :{" "}
+              <span className="font-semibold text-[var(--color-text)]">
+                {effectiveDeficit} kcal/j
+              </span>
+            </p>
+          </div>
+        ) : null}
       </Card>
 
       <Card className="space-y-4">
@@ -230,29 +308,39 @@ export function ProfileForm({ initial }: { initial: InitialProfile }) {
           Plus le déficit est grand, plus la perte est rapide — mais plus
           exigeante. 300–500 kcal/j est un bon repère.
         </CardDescription>
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-[var(--color-muted)]">Déficit</span>
-          <span className="text-lg font-semibold">{deficit} kcal/j</span>
-        </div>
-        <Slider
-          value={deficit}
-          onChange={setDeficit}
-          min={100}
-          max={1000}
-          step={50}
-        />
-        <div className="flex justify-between text-xs text-[var(--color-muted)]">
-          <span>100</span>
-          <span>1000</span>
-        </div>
-        {tdee && (
+        {goalMode === "deficit" ? (
+          <>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-[var(--color-muted)]">Déficit</span>
+              <span className="text-lg font-semibold">{deficit} kcal/j</span>
+            </div>
+            <Slider
+              value={deficit}
+              onChange={setDeficit}
+              min={100}
+              max={1000}
+              step={50}
+            />
+            <div className="flex justify-between text-xs text-[var(--color-muted)]">
+              <span>100</span>
+              <span>1000</span>
+            </div>
+          </>
+        ) : (
+          <p className="text-sm text-[var(--color-muted)]">
+            Utilise le mode « Objectif kcal/j » ci-dessus pour fixer tes calories
+            au quotidien : le déficit est calculé automatiquement (TDEE −
+            objectif).
+          </p>
+        )}
+        {tdeePreview && goalMode === "deficit" ? (
           <p className="text-sm text-[var(--color-muted)]">
             Perte estimée :{" "}
             <span className="font-semibold text-[var(--color-text)]">
-              {tdee.weeklyLossKg} kg/semaine
+              {tdeePreview.weeklyLossKg} kg/semaine
             </span>
           </p>
-        )}
+        ) : null}
       </Card>
 
       <Button block size="lg" loading={saving} onClick={save}>

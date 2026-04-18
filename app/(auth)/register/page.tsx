@@ -32,7 +32,7 @@ export default function RegisterPage() {
     }
     setLoading(true);
     const supabase = createClient();
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -45,8 +45,18 @@ export default function RegisterPage() {
       setError(error.message);
       return;
     }
+    // Si la confirmation email est désactivée côté Supabase, une session est
+    // déjà créée → on file direct à l'onboarding (sinon la redirection vers
+    // /login alors qu'on est connecté provoque un écran vide le temps que
+    // le cookie session soit synchronisé côté serveur).
+    if (data.session) {
+      toast.success("Bienvenue ! On configure ton profil.");
+      router.replace("/onboarding");
+      router.refresh();
+      return;
+    }
     toast.success("Bienvenue ! Vérifie ton email pour confirmer.");
-    router.push("/login");
+    router.replace("/login");
   }
 
   return (

@@ -1,0 +1,151 @@
+-- ─────────────────────────────────────────────────────────────
+-- SlimTrack — Re-seed food_database (base 0004)
+-- Le user avait lancé 0004 deux fois → doublons supprimés à la main.
+-- On réinsère tout le contenu de 0004 avec ON CONFLICT (name) DO NOTHING
+-- (l'index unique sur name a été créé en 0021_seed_food_master.sql).
+-- ─────────────────────────────────────────────────────────────
+
+insert into public.food_database
+  (name, name_fr, kcal_per_100g, protein_per_100g, carbs_per_100g, fat_per_100g, fiber_per_100g, category)
+values
+-- Féculents
+('White rice cooked',     'Riz blanc cuit',             130, 2.7, 28.0, 0.3, 0.4, 'féculent'),
+('Brown rice cooked',     'Riz complet cuit',           112, 2.3, 23.5, 0.9, 1.8, 'féculent'),
+('Pasta cooked',          'Pâtes cuites',               158, 5.8, 30.9, 0.9, 1.8, 'féculent'),
+('Whole wheat pasta',     'Pâtes complètes cuites',     124, 5.3, 26.5, 1.4, 3.9, 'féculent'),
+('Bread white',           'Pain blanc',                 265, 9.0, 49.0, 3.2, 2.7, 'féculent'),
+('Bread whole grain',     'Pain complet',               247, 13.0, 41.0, 3.4, 7.0, 'féculent'),
+('Baguette',              'Baguette',                   280, 9.5, 57.5, 1.3, 2.7, 'féculent'),
+('Potato boiled',         'Pomme de terre à l''eau',     87, 1.9, 20.1, 0.1, 1.8, 'féculent'),
+('Potato fries',          'Frites',                     319, 3.4, 41.0, 15.5, 3.8, 'féculent'),
+('Sweet potato',          'Patate douce',                86, 1.6, 20.0, 0.1, 3.0, 'féculent'),
+('Quinoa cooked',         'Quinoa cuit',                120, 4.4, 21.3, 1.9, 2.8, 'féculent'),
+('Couscous cooked',       'Semoule cuite',              112, 3.8, 23.2, 0.2, 1.4, 'féculent'),
+('Oats dry',              'Flocons d''avoine',          379, 13.1, 68.2, 6.5, 10.1, 'féculent'),
+('Corn cooked',           'Maïs cuit',                   96, 3.4, 20.4, 1.5, 2.4, 'féculent'),
+('Lentils cooked',        'Lentilles cuites',           116, 9.0, 20.1, 0.4, 7.9, 'féculent'),
+('Chickpeas cooked',      'Pois chiches cuits',         164, 8.9, 27.4, 2.6, 7.6, 'féculent'),
+('Kidney beans',          'Haricots rouges cuits',      127, 8.7, 22.8, 0.5, 6.4, 'féculent'),
+
+-- Viandes / Poissons / Œufs
+('Chicken breast',        'Poulet blanc grillé',        165, 31.0, 0.0, 3.6, 0.0, 'viande'),
+('Chicken thigh',          'Cuisse de poulet',          177, 24.0, 0.0, 9.3, 0.0, 'viande'),
+('Turkey breast',         'Dinde',                       157, 30.0, 0.0, 3.7, 0.0, 'viande'),
+('Beef lean',             'Bœuf maigre grillé',         250, 26.0, 0.0, 15.0, 0.0, 'viande'),
+('Beef steak',            'Steak de bœuf',              271, 25.4, 0.0, 19.0, 0.0, 'viande'),
+('Ground beef 15%',       'Steak haché 15% MG',         220, 19.5, 0.0, 15.0, 0.0, 'viande'),
+('Pork loin',             'Porc (filet)',               200, 23.0, 0.0, 12.0, 0.0, 'viande'),
+('Bacon',                 'Bacon',                      417, 37.0, 1.4, 28.0, 0.0, 'viande'),
+('Ham',                   'Jambon blanc',               115, 18.0, 1.0, 4.0, 0.0, 'viande'),
+('Lamb',                  'Agneau',                     294, 25.0, 0.0, 21.0, 0.0, 'viande'),
+('Salmon',                'Saumon',                     208, 20.4, 0.0, 13.4, 0.0, 'poisson'),
+('Tuna canned water',     'Thon au naturel',            116, 26.0, 0.0, 1.0, 0.0, 'poisson'),
+('Cod',                   'Cabillaud',                   82, 18.0, 0.0, 0.7, 0.0, 'poisson'),
+('Shrimp',                'Crevettes',                   85, 20.0, 0.0, 1.0, 0.0, 'poisson'),
+('Sardines oil',          'Sardines à l''huile',        208, 25.0, 0.0, 11.0, 0.0, 'poisson'),
+('Egg',                   'Œuf entier',                 143, 12.6, 0.7, 9.5, 0.0, 'œuf'),
+('Egg white',             'Blanc d''œuf',                52, 10.9, 0.7, 0.2, 0.0, 'œuf'),
+
+-- Laitiers
+('Milk semi-skimmed',     'Lait demi-écrémé',            46, 3.2, 4.8, 1.5, 0.0, 'laitier'),
+('Whole milk',            'Lait entier',                 62, 3.2, 4.8, 3.5, 0.0, 'laitier'),
+('Yogurt natural',        'Yaourt nature',               58, 4.6, 5.1, 2.7, 0.0, 'laitier'),
+('Greek yogurt 0%',       'Yaourt grec 0%',              59, 10.0, 3.6, 0.4, 0.0, 'laitier'),
+('Skyr',                  'Skyr',                        64, 11.0, 4.0, 0.2, 0.0, 'laitier'),
+('Cottage cheese',        'Fromage blanc',               72, 7.5, 3.5, 3.5, 0.0, 'laitier'),
+('Mozzarella',            'Mozzarella',                 280, 18.0, 3.0, 22.0, 0.0, 'fromage'),
+('Feta',                  'Feta',                       264, 14.2, 4.1, 21.3, 0.0, 'fromage'),
+('Cheddar',               'Cheddar',                    404, 23.0, 1.3, 33.0, 0.0, 'fromage'),
+('Parmesan',              'Parmesan',                   392, 36.0, 3.2, 25.0, 0.0, 'fromage'),
+('Comté',                 'Comté',                      412, 27.0, 0.5, 34.0, 0.0, 'fromage'),
+('Camembert',             'Camembert',                  298, 20.0, 0.1, 24.0, 0.0, 'fromage'),
+('Butter',                'Beurre',                     717, 0.9, 0.1, 81.1, 0.0, 'matière grasse'),
+
+-- Légumes
+('Tomato',                'Tomate',                      18, 0.9, 3.9, 0.2, 1.2, 'légume'),
+('Cucumber',              'Concombre',                   16, 0.7, 3.6, 0.1, 0.5, 'légume'),
+('Carrot',                'Carotte',                     41, 0.9, 9.6, 0.2, 2.8, 'légume'),
+('Zucchini',              'Courgette',                   17, 1.2, 3.1, 0.3, 1.0, 'légume'),
+('Eggplant',              'Aubergine',                   25, 1.0, 5.9, 0.2, 3.0, 'légume'),
+('Bell pepper',           'Poivron',                     31, 1.0, 6.0, 0.3, 2.1, 'légume'),
+('Onion',                 'Oignon',                      40, 1.1, 9.3, 0.1, 1.7, 'légume'),
+('Garlic',                'Ail',                        149, 6.4, 33.0, 0.5, 2.1, 'légume'),
+('Spinach',               'Épinards',                    23, 2.9, 3.6, 0.4, 2.2, 'légume'),
+('Lettuce',               'Laitue',                      15, 1.4, 2.9, 0.2, 1.3, 'légume'),
+('Broccoli',              'Brocoli',                     34, 2.8, 6.6, 0.4, 2.6, 'légume'),
+('Cauliflower',           'Chou-fleur',                  25, 1.9, 4.9, 0.3, 2.0, 'légume'),
+('Green beans',           'Haricots verts',              31, 1.8, 7.0, 0.2, 2.7, 'légume'),
+('Peas',                  'Petits pois',                 81, 5.4, 14.5, 0.4, 5.7, 'légume'),
+('Mushrooms',             'Champignons',                 22, 3.1, 3.3, 0.3, 1.0, 'légume'),
+('Cabbage',               'Chou',                        25, 1.3, 5.8, 0.1, 2.5, 'légume'),
+('Asparagus',             'Asperges',                    20, 2.2, 3.9, 0.1, 2.1, 'légume'),
+('Avocado',               'Avocat',                     160, 2.0, 8.5, 14.7, 6.7, 'fruit'),
+('Okra',                  'Gombo',                       33, 1.9, 7.5, 0.2, 3.2, 'légume'),
+
+-- Fruits
+('Apple',                 'Pomme',                       52, 0.3, 13.8, 0.2, 2.4, 'fruit'),
+('Banana',                'Banane',                      89, 1.1, 22.8, 0.3, 2.6, 'fruit'),
+('Orange',                'Orange',                      47, 0.9, 11.8, 0.1, 2.4, 'fruit'),
+('Mandarin',              'Mandarine',                   53, 0.8, 13.3, 0.3, 1.8, 'fruit'),
+('Strawberry',            'Fraise',                      32, 0.7, 7.7, 0.3, 2.0, 'fruit'),
+('Blueberry',             'Myrtille',                    57, 0.7, 14.5, 0.3, 2.4, 'fruit'),
+('Raspberry',             'Framboise',                   52, 1.2, 11.9, 0.7, 6.5, 'fruit'),
+('Grape',                 'Raisin',                      69, 0.7, 18.1, 0.2, 0.9, 'fruit'),
+('Pineapple',             'Ananas',                      50, 0.5, 13.1, 0.1, 1.4, 'fruit'),
+('Mango',                 'Mangue',                      60, 0.8, 15.0, 0.4, 1.6, 'fruit'),
+('Papaya',                'Papaye',                      43, 0.5, 10.8, 0.3, 1.7, 'fruit'),
+('Watermelon',            'Pastèque',                    30, 0.6, 7.6, 0.2, 0.4, 'fruit'),
+('Kiwi',                  'Kiwi',                        61, 1.1, 14.7, 0.5, 3.0, 'fruit'),
+('Pear',                  'Poire',                       57, 0.4, 15.2, 0.1, 3.1, 'fruit'),
+('Peach',                 'Pêche',                       39, 0.9, 9.5, 0.3, 1.5, 'fruit'),
+('Cherry',                'Cerise',                      63, 1.1, 16.0, 0.2, 2.1, 'fruit'),
+('Lemon',                 'Citron',                      29, 1.1, 9.3, 0.3, 2.8, 'fruit'),
+('Date',                  'Datte',                      277, 1.8, 75.0, 0.2, 6.7, 'fruit'),
+('Raisin',                'Raisin sec',                 299, 3.1, 79.2, 0.5, 3.7, 'fruit'),
+
+-- Oléagineux / graines
+('Almond',                'Amande',                     579, 21.2, 21.6, 49.9, 12.5, 'oléagineux'),
+('Walnut',                'Noix',                       654, 15.2, 13.7, 65.2, 6.7, 'oléagineux'),
+('Cashew',                'Noix de cajou',              553, 18.0, 30.2, 43.8, 3.3, 'oléagineux'),
+('Peanut',                'Cacahuète',                  567, 25.8, 16.1, 49.2, 8.5, 'oléagineux'),
+('Peanut butter',         'Beurre de cacahuète',        588, 25.0, 20.0, 50.0, 6.0, 'oléagineux'),
+('Chia seeds',            'Graines de chia',            486, 16.5, 42.1, 30.7, 34.4, 'graine'),
+('Flax seeds',            'Graines de lin',             534, 18.3, 28.9, 42.2, 27.3, 'graine'),
+('Sunflower seeds',       'Graines de tournesol',       584, 20.8, 20.0, 51.5, 8.6, 'graine'),
+
+-- Huiles / matières grasses
+('Olive oil',             'Huile d''olive',             884, 0.0, 0.0, 100.0, 0.0, 'matière grasse'),
+('Sunflower oil',         'Huile de tournesol',         884, 0.0, 0.0, 100.0, 0.0, 'matière grasse'),
+('Coconut oil',           'Huile de coco',              862, 0.0, 0.0, 100.0, 0.0, 'matière grasse'),
+('Mayonnaise',            'Mayonnaise',                 680, 1.0, 2.0, 75.0, 0.0, 'matière grasse'),
+
+-- Sucre / snacks / préparés
+('Sugar',                 'Sucre',                      387, 0.0, 99.8, 0.0, 0.0, 'sucre'),
+('Honey',                 'Miel',                       304, 0.3, 82.4, 0.0, 0.2, 'sucre'),
+('Dark chocolate 70%',    'Chocolat noir 70%',          598, 7.8, 45.9, 42.6, 10.9, 'sucre'),
+('Milk chocolate',        'Chocolat au lait',           535, 7.7, 59.4, 29.7, 3.4, 'sucre'),
+('Nutella',               'Pâte à tartiner (Nutella)',  539, 6.3, 57.5, 30.9, 3.4, 'sucre'),
+('Croissant',             'Croissant',                  406, 8.2, 45.8, 21.0, 2.6, 'sucre'),
+('Cookie',                'Cookie',                     488, 6.0, 62.0, 24.0, 2.0, 'sucre'),
+('Ice cream vanilla',     'Glace vanille',              207, 3.5, 23.6, 11.0, 0.7, 'sucre'),
+
+-- Boissons
+('Coffee black',          'Café noir',                    2, 0.1, 0.0, 0.0, 0.0, 'boisson'),
+('Tea',                   'Thé',                          1, 0.0, 0.3, 0.0, 0.0, 'boisson'),
+('Orange juice',          'Jus d''orange',               45, 0.7, 10.4, 0.2, 0.2, 'boisson'),
+('Apple juice',           'Jus de pomme',                46, 0.1, 11.3, 0.1, 0.2, 'boisson'),
+('Coca Cola',             'Coca Cola',                   42, 0.0, 10.6, 0.0, 0.0, 'boisson'),
+('Beer',                  'Bière',                       43, 0.5, 3.6, 0.0, 0.0, 'boisson'),
+('Wine red',              'Vin rouge',                   85, 0.1, 2.6, 0.0, 0.0, 'boisson'),
+
+-- Poissons & viandes spécifiques FR/Afrique
+('Tilapia',               'Tilapia',                     96, 20.1, 0.0, 1.7, 0.0, 'poisson'),
+('Mackerel',              'Maquereau',                  205, 19.0, 0.0, 13.9, 0.0, 'poisson'),
+('Fonio cooked',          'Fonio cuit',                 128, 2.8, 27.0, 0.5, 1.4, 'féculent'),
+('Manioc',                'Manioc cuit',                160, 1.4, 38.1, 0.3, 1.8, 'féculent'),
+('Plantain cooked',       'Banane plantain cuite',      122, 1.3, 32.0, 0.2, 2.3, 'féculent'),
+('Yam cooked',            'Igname cuite',               118, 1.5, 27.9, 0.2, 4.1, 'féculent'),
+('Peanut soup',           'Sauce arachide',             220, 8.0, 12.0, 15.0, 2.0, 'plat'),
+('Chicken stew',          'Poulet sauce tomate',        150, 15.0, 5.0, 8.0, 1.0, 'plat'),
+('Rice and beans',        'Riz aux haricots',           180, 6.0, 30.0, 3.0, 5.0, 'plat')
+on conflict (name) do nothing;

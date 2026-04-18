@@ -10,8 +10,9 @@ export default async function StatsPage() {
   } = await supabase.auth.getUser();
   if (!user) return null;
 
+  /** Doit couvrir la plus longue plage UI (6 mois ≈ 180 j) + marge. */
   const since = new Date();
-  since.setDate(since.getDate() - 90);
+  since.setDate(since.getDate() - 200);
   const sinceStr = since.toISOString().slice(0, 10);
 
   const [{ data: weights }, { data: logs }, { data: measures }] =
@@ -43,7 +44,7 @@ export default async function StatsPage() {
       <header>
         <h1 className="text-2xl font-bold">Statistiques</h1>
         <p className="text-sm text-[var(--color-muted)]">
-          Ton évolution sur les 90 derniers jours.
+          Jusqu&apos;à 6 mois d&apos;historique — ajuste la plage ci-dessous.
         </p>
       </header>
       <StatsView

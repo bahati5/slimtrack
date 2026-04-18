@@ -10,6 +10,7 @@ import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { KcalRing } from "@/components/daily/kcal-ring";
+import { MacroBars } from "@/components/daily/macro-bars";
 import { MonthCalendar } from "@/components/daily/month-calendar";
 import { Fab } from "@/components/shared/fab";
 import { TodayContentSkeleton } from "@/components/shared/app-page-skeleton";
@@ -254,6 +255,16 @@ export function TodayView({
     (daily?.total_kcal_burned ?? 0) + (daily?.steps_kcal_burned ?? 0);
   const net = Math.max(0, eaten - burned);
   const respected = daily?.deficit_respected ?? true;
+  const mealList = data?.meals ?? [];
+  const proteinTotal = mealList.reduce(
+    (acc, m) => acc + (m.total_protein_g ?? 0),
+    0,
+  );
+  const carbsTotal = mealList.reduce(
+    (acc, m) => acc + (m.total_carbs_g ?? 0),
+    0,
+  );
+  const fatTotal = mealList.reduce((acc, m) => acc + (m.total_fat_g ?? 0), 0);
 
   return (
     <div
@@ -378,6 +389,15 @@ export function TodayView({
               </span>
             </div>
           </Card>
+
+          {/* Focus macros — priorité protéines pour la sèche */}
+          <MacroBars
+            proteinG={proteinTotal}
+            carbsG={carbsTotal}
+            fatG={fatTotal}
+            weightKg={profile.current_weight_kg}
+            targetKcal={target}
+          />
 
           {daily?.coach_comment ? (
             <Card className="space-y-2 border-[var(--color-primary)]/25 bg-[var(--color-card-soft)]/90">
