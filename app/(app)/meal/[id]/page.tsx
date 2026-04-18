@@ -5,7 +5,7 @@ import { ChevronLeft, Utensils, Clock } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { formatKcal } from "@/lib/utils/format";
+import { formatKcal, todayHrefAfterLog, todayIso } from "@/lib/utils/format";
 import { MealComments } from "./comments";
 
 export const dynamic = "force-dynamic";
@@ -31,10 +31,18 @@ export default async function MealDetailPage({
 
   const { data: meal } = await supabase
     .from("meals")
-    .select("*")
+    .select("*, daily_logs ( log_date )")
     .eq("id", id)
     .maybeSingle();
   if (!meal) notFound();
+
+  const rawDl = meal.daily_logs as
+    | { log_date?: string }
+    | { log_date?: string }[]
+    | null;
+  const dlRow = Array.isArray(rawDl) ? rawDl[0] : rawDl;
+  const logDate =
+    dlRow?.log_date?.slice(0, 10) ?? todayIso();
 
   const { data: viewerProfile } = await supabase
     .from("profiles")
@@ -72,19 +80,31 @@ export default async function MealDetailPage({
   // @ts-expect-error supabase types not generated
   const viewerRole = viewerProfile?.role as string | undefined;
   const isCoachOrAdmin = viewerRole === "coach" || viewerRole === "admin";
+  const isOwner = mealUserId === user.id;
   const backHref =
-    isCoachOrAdmin && mealUserId !== user.id
+    isCoachOrAdmin && !isOwner
       ? `/coach/${mealUserId}`
-      : "/today";
+      : todayHrefAfterLog(logDate);
+  const editMealHref = `/log-meal?edit=${encodeURIComponent(id)}&date=${encodeURIComponent(logDate)}`;
 
   return (
     <div className="space-y-4 p-5 pb-8">
-      <Link
-        href={backHref}
-        className="inline-flex items-center gap-1 text-sm text-[var(--color-muted)] hover:text-[var(--color-text)]"
-      >
-        <ChevronLeft className="size-4" /> Retour
-      </Link>
+      <div className="flex flex-wrap items-center gap-3">
+        <Link
+          href={backHref}
+          className="inline-flex items-center gap-1 text-sm text-[var(--color-muted)] hover:text-[var(--color-text)]"
+        >
+          <ChevronLeft className="size-4" /> Retour
+        </Link>
+        {isOwner ? (
+          <Link
+            href={editMealHref}
+            className="text-sm font-semibold text-[var(--color-primary-soft)] hover:underline"
+          >
+            Modifier le repas
+          </Link>
+        ) : null}
+      </div>
 
       {/* Photo */}
       {mediaUrls.length > 0 ? (

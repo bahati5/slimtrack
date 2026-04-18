@@ -70,7 +70,82 @@ export function LogActivityForm({
   const [media, setMedia] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const searchParams = useSearchParams();
-  const date = searchParams.get("date") ?? todayIso();
+  const editFromUrl = searchParams.get("edit");
+  const dateFromUrl = searchParams.get("date");
+  const [logDate, setLogDate] = useState(() => dateFromUrl ?? todayIso());
+  const [editingActivityId, setEditingActivityId] = useState<string | null>(
+    null,
+  );
+  const [loadingEdit, setLoadingEdit] = useState(Boolean(editFromUrl));
+
+  useEffect(() => {
+    if (!editFromUrl) {
+      setLoadingEdit(false);
+      setEditingActivityId(null);
+      setLogDate(dateFromUrl ?? todayIso());
+      return;
+    }
+
+    let cancelled = false;
+    setLoadingEdit(true);
+    (async () => {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        if (!cancelled) setLoadingEdit(false);
+        return;
+      }
+
+      const { data: row, error } = await supabase
+        .from("activities")
+        .select(
+          "id, activity_type, name, youtube_url, youtube_thumbnail, duration_min, kcal_burned, steps, media_urls, notes, daily_logs ( log_date )",
+        )
+        .eq("id", editFromUrl)
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (cancelled) return;
+
+      if (error || !row) {
+        toast.error("Activité introuvable ou accès refusé");
+        router.replace("/today");
+        setLoadingEdit(false);
+        return;
+      }
+
+      const rawDl = row.daily_logs as
+        | { log_date?: string }
+        | { log_date?: string }[]
+        | null;
+      const dlRow = Array.isArray(rawDl) ? rawDl[0] : rawDl;
+      setLogDate(
+        dlRow?.log_date?.slice(0, 10) ??
+          dateFromUrl ??
+          todayIso(),
+      );
+
+      setType(row.activity_type as ActivityType);
+      setName(row.name ?? "");
+      setYoutubeUrl(row.youtube_url ?? "");
+      setYoutubeThumb(row.youtube_thumbnail);
+      setDuration(row.duration_min ?? 30);
+      setSteps(row.steps ?? "");
+      const kb = row.kcal_burned as number;
+      setKcal(kb);
+      setKcalTouched(true);
+      setNotes(row.notes ?? "");
+      setMedia(Array.isArray(row.media_urls) ? row.media_urls : []);
+      setEditingActivityId(row.id);
+      setLoadingEdit(false);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [editFromUrl, dateFromUrl, router, toast]);
 
   // Estimation automatique
   const estimated = useMemo(() => {
@@ -87,12 +162,13 @@ export function LogActivityForm({
     if (!kcalTouched) setKcal(estimated);
   }, [estimated, kcalTouched]);
 
-  // YouTube oEmbed
+  // YouTube oEmbed (ne pas effacer la miniature d’une fiche déjà chargée si l’URL est encore vide)
   useEffect(() => {
-    if (type !== "youtube" || !youtubeUrl) {
+    if (type !== "youtube") {
       setYoutubeThumb(null);
       return;
     }
+    if (!youtubeUrl.trim()) return;
     const t = setTimeout(async () => {
       try {
         const res = await fetch(
@@ -119,10 +195,42 @@ export function LogActivityForm({
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) {
+      setSaving(false);
+      return;
+    }
+
+    const kcalVal = typeof kcal === "number" ? kcal : estimated;
+
+    if (editingActivityId) {
+      const { error } = await supabase
+        .from("activities")
+        .update({
+          activity_type: type,
+          name,
+          youtube_url: type === "youtube" ? youtubeUrl || null : null,
+          youtube_thumbnail: type === "youtube" ? youtubeThumb : null,
+          duration_min: duration,
+          kcal_burned: kcalVal,
+          steps: typeof steps === "number" ? steps : null,
+          media_urls: media,
+          notes: notes || null,
+        })
+        .eq("id", editingActivityId)
+        .eq("user_id", user.id);
+      setSaving(false);
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      toast.success("Activité mise à jour 💪");
+      router.push(todayHrefAfterLog(logDate));
+      router.refresh();
+      return;
+    }
 
     const { data: dl } = await supabase.rpc("get_or_create_daily_log", {
-      p_date: date,
+      p_date: logDate,
     });
     if (!dl) {
       toast.error("Impossible de créer le journal");
@@ -136,9 +244,9 @@ export function LogActivityForm({
       activity_type: type,
       name,
       youtube_url: type === "youtube" ? youtubeUrl || null : null,
-      youtube_thumbnail: youtubeThumb,
+      youtube_thumbnail: type === "youtube" ? youtubeThumb : null,
       duration_min: duration,
-      kcal_burned: typeof kcal === "number" ? kcal : estimated,
+      kcal_burned: kcalVal,
       steps: typeof steps === "number" ? steps : null,
       media_urls: media,
       notes: notes || null,
@@ -150,8 +258,49 @@ export function LogActivityForm({
       return;
     }
     toast.success("Activité enregistrée 💪");
-    router.push(todayHrefAfterLog(date));
+    router.push(todayHrefAfterLog(logDate));
     router.refresh();
+  }
+
+  async function deleteActivity() {
+    if (!editingActivityId) return;
+    if (
+      !confirm(
+        "Supprimer définitivement cette activité ? Cette action est irréversible.",
+      )
+    ) {
+      return;
+    }
+    setSaving(true);
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      setSaving(false);
+      return;
+    }
+    const { error } = await supabase
+      .from("activities")
+      .delete()
+      .eq("id", editingActivityId)
+      .eq("user_id", user.id);
+    setSaving(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Activité supprimée");
+    router.push(todayHrefAfterLog(logDate));
+    router.refresh();
+  }
+
+  if (loadingEdit) {
+    return (
+      <div className="py-12 text-center text-sm text-[var(--color-muted)]">
+        Chargement de l&apos;activité…
+      </div>
+    );
   }
 
   return (
@@ -276,15 +425,28 @@ export function LogActivityForm({
           value={media}
           onChange={setMedia}
           kind="activity"
-          date={date}
+          date={logDate}
           max={3}
           accept="image/*"
         />
       </Card>
 
       <Button block size="lg" loading={saving} onClick={submit}>
-        Enregistrer l&apos;activité
+        {editingActivityId
+          ? "Enregistrer les modifications"
+          : "Enregistrer l'activité"}
       </Button>
+
+      {editingActivityId ? (
+        <Button
+          type="button"
+          variant="outline"
+          block
+          disabled={saving}
+          onClick={deleteActivity}>
+          Supprimer cette activité
+        </Button>
+      ) : null}
     </div>
   );
 }

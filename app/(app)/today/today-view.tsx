@@ -441,7 +441,18 @@ export function TodayView({
               <ul className="space-y-2">
                 {data.activities.map((a) => (
                   <li key={a.id}>
-                    <ActivityRowCard a={a} />
+                    {!readonly ? (
+                      <Link
+                        href={`/log-activity?edit=${a.id}&date=${encodeURIComponent(date)}`}
+                        prefetch={false}
+                        className="block"
+                        aria-label={`Modifier l'activité ${a.name}`}
+                      >
+                        <ActivityRowCard a={a} editableHint />
+                      </Link>
+                    ) : (
+                      <ActivityRowCard a={a} />
+                    )}
                   </li>
                 ))}
               </ul>
@@ -639,10 +650,17 @@ function MealRow({
   );
 }
 
-function ActivityRowCard({ a }: { a: ActivityRow }) {
+function ActivityRowCard({
+  a,
+  editableHint,
+}: {
+  a: ActivityRow;
+  /** Affiche une flèche pour indiquer l’édition (lien activité). */
+  editableHint?: boolean;
+}) {
   const thumb = a.youtube_thumbnail ?? a.media_urls?.[0];
   return (
-    <div className="flex items-center gap-3 rounded-2xl bg-[var(--color-card)] p-3">
+    <div className="flex items-center gap-3 rounded-2xl bg-[var(--color-card)] p-3 transition hover:bg-[var(--color-card-soft)]">
       <div className="relative size-14 overflow-hidden rounded-xl bg-[var(--color-card-soft)]">
         {thumb ? (
           <Image
@@ -663,8 +681,16 @@ function ActivityRowCard({ a }: { a: ActivityRow }) {
           {a.steps ? ` · ${a.steps.toLocaleString("fr-FR")} pas` : ""}
         </div>
       </div>
-      <div className="text-sm font-semibold text-[var(--color-success)]">
-        −{formatKcal(a.kcal_burned)}
+      <div className="flex shrink-0 items-center gap-1">
+        <div className="text-sm font-semibold text-[var(--color-success)]">
+          −{formatKcal(a.kcal_burned)}
+        </div>
+        {editableHint ? (
+          <ChevronRight
+            className="size-4 text-[var(--color-muted)]"
+            aria-hidden
+          />
+        ) : null}
       </div>
     </div>
   );

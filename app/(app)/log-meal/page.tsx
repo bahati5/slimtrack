@@ -4,7 +4,13 @@ import { LogMealForm } from "./log-meal-form";
 
 export const dynamic = "force-dynamic";
 
-export default async function LogMealPage() {
+export default async function LogMealPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ date?: string; edit?: string }>;
+}) {
+  const sp = await searchParams;
+  const isEdit = Boolean(sp?.edit);
   const supabase = await createClient();
   const {
     data: { user },
@@ -13,9 +19,13 @@ export default async function LogMealPage() {
   return (
     <div className="space-y-4 p-5">
       <header>
-        <h1 className="text-2xl font-bold">Nouveau repas</h1>
+        <h1 className="text-2xl font-bold">
+          {isEdit ? "Modifier le repas" : "Nouveau repas"}
+        </h1>
         <p className="text-sm text-[var(--color-muted)]">
-          Détaille chaque aliment pour un calcul précis.
+          {isEdit
+            ? "Corrige les aliments et quantités puis enregistre."
+            : "Détaille chaque aliment pour un calcul précis."}
         </p>
       </header>
       <Suspense>

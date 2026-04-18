@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Trash2, Plus } from "lucide-react";
@@ -41,7 +41,97 @@ export function LogMealForm({ userId: _userId }: { userId: string }) {
   const [media, setMedia] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const searchParams = useSearchParams();
-  const date = searchParams.get("date") ?? todayIso();
+  const editFromUrl = searchParams.get("edit");
+  const dateFromUrl = searchParams.get("date");
+  const [logDate, setLogDate] = useState(() => dateFromUrl ?? todayIso());
+  /** Repas existant à mettre à jour (query `edit=`). */
+  const [editingMealId, setEditingMealId] = useState<string | null>(null);
+  const [loadingEdit, setLoadingEdit] = useState(Boolean(editFromUrl));
+
+  useEffect(() => {
+    if (!editFromUrl) {
+      setLoadingEdit(false);
+      setEditingMealId(null);
+      setLogDate(dateFromUrl ?? todayIso());
+      return;
+    }
+
+    let cancelled = false;
+    setLoadingEdit(true);
+    (async () => {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        if (!cancelled) setLoadingEdit(false);
+        return;
+      }
+
+      const { data: meal, error } = await supabase
+        .from("meals")
+        .select(
+          "id, name, meal_type, notes, media_urls, eaten_at, daily_logs ( log_date )",
+        )
+        .eq("id", editFromUrl)
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (cancelled) return;
+
+      if (error || !meal) {
+        toast.error("Repas introuvable ou accès refusé");
+        router.replace("/today");
+        setLoadingEdit(false);
+        return;
+      }
+
+      const rawDl = meal.daily_logs as
+        | { log_date?: string }
+        | { log_date?: string }[]
+        | null;
+      const dlRow = Array.isArray(rawDl) ? rawDl[0] : rawDl;
+      const rowDate =
+        dlRow?.log_date?.slice(0, 10) ??
+        dateFromUrl ??
+        todayIso();
+      setLogDate(rowDate);
+
+      setName(String(meal.name));
+      setMealType(meal.meal_type as MealTypeValue);
+      setNotes(meal.notes ?? "");
+      setMedia(Array.isArray(meal.media_urls) ? meal.media_urls : []);
+      setEditingMealId(meal.id);
+
+      const { data: mealItems } = await supabase
+        .from("meal_items")
+        .select(
+          "food_name, quantity_g, kcal_per_100g, protein_g, carbs_g, fat_g, fiber_g",
+        )
+        .eq("meal_id", meal.id)
+        .order("created_at", { ascending: true });
+
+      if (cancelled) return;
+
+      setItems(
+        ((mealItems ?? []) as Record<string, unknown>[]).map((row) => ({
+          tempId: Math.random().toString(36).slice(2),
+          name_fr: String(row.food_name),
+          quantity_g: Number(row.quantity_g),
+          kcal_per_100g: Number(row.kcal_per_100g),
+          protein_per_100g: Number(row.protein_g),
+          carbs_per_100g: Number(row.carbs_g),
+          fat_per_100g: Number(row.fat_g),
+          fiber_per_100g: Number(row.fiber_g ?? 0),
+        })),
+      );
+      setLoadingEdit(false);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [editFromUrl, dateFromUrl, router, toast]);
 
   function addFood(f: FoodRow) {
     setItems((prev) => [
@@ -96,10 +186,63 @@ export function LogMealForm({ userId: _userId }: { userId: string }) {
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) {
+      setSaving(false);
+      return;
+    }
+
+    if (editingMealId) {
+      const { error: upErr } = await supabase
+        .from("meals")
+        .update({
+          name: name || MEAL_TYPES.find((m) => m.value === mealType)!.label,
+          meal_type: mealType,
+          media_urls: media,
+          notes: notes || null,
+        })
+        .eq("id", editingMealId)
+        .eq("user_id", user.id);
+      if (upErr) {
+        toast.error(upErr.message);
+        setSaving(false);
+        return;
+      }
+      const { error: delErr } = await supabase
+        .from("meal_items")
+        .delete()
+        .eq("meal_id", editingMealId);
+      if (delErr) {
+        toast.error(delErr.message);
+        setSaving(false);
+        return;
+      }
+      const itemsPayload = items.map((it) => ({
+        meal_id: editingMealId,
+        user_id: user.id,
+        food_name: it.name_fr,
+        quantity_g: it.quantity_g,
+        kcal_per_100g: it.kcal_per_100g,
+        protein_g: it.protein_per_100g,
+        carbs_g: it.carbs_per_100g,
+        fat_g: it.fat_per_100g,
+        fiber_g: it.fiber_per_100g,
+      }));
+      const { error: insErr } = await supabase
+        .from("meal_items")
+        .insert(itemsPayload);
+      setSaving(false);
+      if (insErr) {
+        toast.error(insErr.message);
+        return;
+      }
+      toast.success("Repas mis à jour 🍽");
+      router.push(todayHrefAfterLog(logDate));
+      router.refresh();
+      return;
+    }
 
     const { data: dl } = await supabase.rpc("get_or_create_daily_log", {
-      p_date: date,
+      p_date: logDate,
     });
     if (!dl) {
       toast.error("Impossible de créer le journal du jour");
@@ -147,8 +290,49 @@ export function LogMealForm({ userId: _userId }: { userId: string }) {
       return;
     }
     toast.success("Repas enregistré 🍽");
-    router.push(todayHrefAfterLog(date));
+    router.push(todayHrefAfterLog(logDate));
     router.refresh();
+  }
+
+  async function deleteMeal() {
+    if (!editingMealId) return;
+    if (
+      !confirm(
+        "Supprimer définitivement ce repas et ses ingrédients ? Cette action est irréversible.",
+      )
+    ) {
+      return;
+    }
+    setSaving(true);
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      setSaving(false);
+      return;
+    }
+    const { error } = await supabase
+      .from("meals")
+      .delete()
+      .eq("id", editingMealId)
+      .eq("user_id", user.id);
+    setSaving(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Repas supprimé");
+    router.push(todayHrefAfterLog(logDate));
+    router.refresh();
+  }
+
+  if (loadingEdit) {
+    return (
+      <div className="py-12 text-center text-sm text-[var(--color-muted)]">
+        Chargement du repas…
+      </div>
+    );
   }
 
   return (
@@ -187,7 +371,7 @@ export function LogMealForm({ userId: _userId }: { userId: string }) {
           value={media}
           onChange={setMedia}
           kind="meal"
-          date={date}
+          date={logDate}
           max={3}
         />
       </Card>
@@ -304,8 +488,19 @@ export function LogMealForm({ userId: _userId }: { userId: string }) {
       )}
 
       <Button block size="lg" loading={saving} onClick={submit}>
-        Enregistrer le repas
+        {editingMealId ? "Enregistrer les modifications" : "Enregistrer le repas"}
       </Button>
+
+      {editingMealId ? (
+        <Button
+          type="button"
+          variant="outline"
+          block
+          disabled={saving}
+          onClick={deleteMeal}>
+          Supprimer ce repas
+        </Button>
+      ) : null}
     </div>
   );
 }
