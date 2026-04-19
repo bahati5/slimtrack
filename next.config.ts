@@ -19,12 +19,7 @@ const nextConfig: NextConfig = {
   // Serwist ajoute un bloc `webpack` même en dev (désactivé) : on indique
   // à Next 16 qu'on accepte de tourner sous Turbopack sans config supplémentaire.
   turbopack: {},
-  // TODO : repasser à false et régénérer `types/database.ts` via
-  //   pnpm dlx supabase gen types typescript --project-id <ref> > types/database.ts
-  // Le client Supabase est volontairement non-typé (generic `<Database>` absent)
-  // tant que la base n'est pas provisionnée — on évite les erreurs TS `never`
-  // qui apparaissent autour de `.maybeSingle()` / `.select('*')`.
-  typescript: { ignoreBuildErrors: true },
+  typescript: { ignoreBuildErrors: false },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "res.cloudinary.com" },

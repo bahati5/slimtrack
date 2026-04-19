@@ -5,8 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Card, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
-import MessageCircle from "lucide-react/dist/esm/icons/message-circle";
-import Send from "lucide-react/dist/esm/icons/send";
+import { MessageCircle, Send } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
 interface Comment {

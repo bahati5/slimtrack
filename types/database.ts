@@ -1,11 +1,13 @@
 /**
- * Types Supabase — à régénérer via `pnpm dlx supabase gen types typescript` une fois
- * les migrations appliquées sur ton projet. Pour l'instant un squelette aligné
- * sur `supabase/migrations/0001_schema.sql`.
+ * Types Supabase — squelette aligné sur les migrations.
+ * À régénérer via `pnpm dlx supabase gen types typescript` une fois la base provisionnée.
+ *
+ * IMPORTANT : utiliser `type` (pas `interface`) pour la compatibilité avec
+ * les index signatures requises par @supabase/supabase-js GenericTable.
  */
 
 export type Sex = "F" | "M";
-export type Role = "user" | "coach";
+export type Role = "user" | "coach" | "admin";
 export type MealType = "breakfast" | "lunch" | "dinner" | "snack";
 export type ActivityType =
   | "youtube"
@@ -17,7 +19,7 @@ export type ActivityType =
   | "other";
 export type DailyStatus = "complete" | "partial" | "empty";
 
-export interface Profile {
+export type Profile = {
   id: string;
   role: Role;
   full_name: string | null;
@@ -32,12 +34,14 @@ export interface Profile {
   tdee: number | null;
   target_kcal: number | null;
   coach_id: string | null;
+  invite_code: string | null;
+  can_edit_foods: boolean;
   timezone: string | null;
   created_at: string;
   updated_at: string;
-}
+};
 
-export interface DailyLog {
+export type DailyLog = {
   id: string;
   user_id: string;
   log_date: string;
@@ -53,9 +57,9 @@ export interface DailyLog {
   status: DailyStatus;
   created_at: string;
   updated_at: string;
-}
+};
 
-export interface Meal {
+export type Meal = {
   id: string;
   user_id: string;
   daily_log_id: string;
@@ -69,9 +73,9 @@ export interface Meal {
   eaten_at: string;
   notes: string | null;
   created_at: string;
-}
+};
 
-export interface MealItem {
+export type MealItem = {
   id: string;
   meal_id: string;
   user_id: string;
@@ -84,9 +88,17 @@ export interface MealItem {
   fat_g: number;
   fiber_g: number;
   created_at: string;
-}
+};
 
-export interface Activity {
+export type MealComment = {
+  id: string;
+  meal_id: string;
+  author_id: string;
+  body: string;
+  created_at: string;
+};
+
+export type Activity = {
   id: string;
   user_id: string;
   daily_log_id: string;
@@ -101,9 +113,9 @@ export interface Activity {
   notes: string | null;
   done_at: string;
   created_at: string;
-}
+};
 
-export interface FoodItem {
+export type FoodItem = {
   id: string;
   name: string;
   name_fr: string;
@@ -116,18 +128,18 @@ export interface FoodItem {
   is_custom: boolean;
   created_by: string | null;
   created_at: string;
-}
+};
 
-export interface WeightLog {
+export type WeightLog = {
   id: string;
   user_id: string;
   weight_kg: number;
   logged_at: string;
   note: string | null;
   created_at: string;
-}
+};
 
-export interface Measurement {
+export type Measurement = {
   id: string;
   user_id: string;
   waist_cm: number | null;
@@ -139,9 +151,9 @@ export interface Measurement {
   right_arm_cm: number | null;
   measured_at: string;
   created_at: string;
-}
+};
 
-export interface Notification {
+export type Notification = {
   id: string;
   user_id: string;
   type: string;
@@ -149,10 +161,10 @@ export interface Notification {
   body: string;
   is_read: boolean;
   created_at: string;
-  link_url?: string | null;
-}
+  link_url: string | null;
+};
 
-export interface PushSubscription {
+export type PushSubscription = {
   id: string;
   user_id: string;
   endpoint: string;
@@ -160,60 +172,82 @@ export interface PushSubscription {
   auth: string;
   user_agent: string | null;
   created_at: string;
-}
+};
 
-/**
- * Squelette de Database pour @supabase/ssr. À remplacer par les types
- * générés par `supabase gen types`.
- */
+type Rel = {
+  foreignKeyName: string;
+  columns: string[];
+  isOneToOne: boolean;
+  referencedRelation: string;
+  referencedColumns: string[];
+};
+
+type Table<R extends Record<string, unknown>> = {
+  Row: R;
+  Insert: Partial<R>;
+  Update: Partial<R>;
+  Relationships: Rel[];
+};
+
 export type Database = {
   public: {
     Tables: {
-      profiles: { Row: Profile; Insert: Partial<Profile>; Update: Partial<Profile> };
-      daily_logs: {
-        Row: DailyLog;
-        Insert: Partial<DailyLog>;
-        Update: Partial<DailyLog>;
-      };
-      meals: { Row: Meal; Insert: Partial<Meal>; Update: Partial<Meal> };
-      meal_items: {
-        Row: MealItem;
-        Insert: Partial<MealItem>;
-        Update: Partial<MealItem>;
-      };
-      activities: {
-        Row: Activity;
-        Insert: Partial<Activity>;
-        Update: Partial<Activity>;
-      };
-      food_database: {
-        Row: FoodItem;
-        Insert: Partial<FoodItem>;
-        Update: Partial<FoodItem>;
-      };
-      weight_logs: {
-        Row: WeightLog;
-        Insert: Partial<WeightLog>;
-        Update: Partial<WeightLog>;
-      };
-      measurements: {
-        Row: Measurement;
-        Insert: Partial<Measurement>;
-        Update: Partial<Measurement>;
-      };
-      notifications: {
-        Row: Notification;
-        Insert: Partial<Notification>;
-        Update: Partial<Notification>;
-      };
-      push_subscriptions: {
-        Row: PushSubscription;
-        Insert: Partial<PushSubscription>;
-        Update: Partial<PushSubscription>;
-      };
+      profiles: Table<Profile>;
+      daily_logs: Table<DailyLog>;
+      meals: Table<Meal>;
+      meal_items: Table<MealItem>;
+      meal_comments: Table<MealComment>;
+      activities: Table<Activity>;
+      food_database: Table<FoodItem>;
+      weight_logs: Table<WeightLog>;
+      measurements: Table<Measurement>;
+      notifications: Table<Notification>;
+      push_subscriptions: Table<PushSubscription>;
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      get_or_create_daily_log: {
+        Args: { p_date: string };
+        Returns: DailyLog;
+        SetofOptions: {
+          isSetofReturn: false;
+          isOneToOne: true;
+          isNotNullable: false;
+          to: "daily_logs";
+          from: "get_or_create_daily_log";
+        };
+      };
+      coach_claim_client: {
+        Args: { p_code: string };
+        Returns: Profile;
+        SetofOptions: {
+          isSetofReturn: false;
+          isOneToOne: true;
+          isNotNullable: false;
+          to: "profiles";
+          from: "coach_claim_client";
+        };
+      };
+      coach_unassign_client: {
+        Args: { p_client_id: string };
+        Returns: undefined;
+      };
+      become_coach: {
+        Args: Record<string, never>;
+        Returns: Profile;
+        SetofOptions: {
+          isSetofReturn: false;
+          isOneToOne: true;
+          isNotNullable: false;
+          to: "profiles";
+          from: "become_coach";
+        };
+      };
+      rotate_my_invite_code: {
+        Args: Record<string, never>;
+        Returns: string;
+      };
+    };
     Enums: {
       user_role: Role;
       sex_type: Sex;

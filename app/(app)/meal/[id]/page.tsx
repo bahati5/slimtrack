@@ -57,28 +57,17 @@ export default async function MealDetailPage({
     .eq("meal_id", id)
     .order("created_at", { ascending: true });
 
-  // @ts-expect-error supabase types not generated
   const mediaUrls: string[] = meal.media_urls ?? [];
-  // @ts-expect-error
   const mealType: string = meal.meal_type;
-  // @ts-expect-error
   const eatenAt: string = meal.eaten_at;
-  // @ts-expect-error
   const mealName: string = meal.name;
-  // @ts-expect-error
   const notes: string | null = meal.notes;
-  // @ts-expect-error
   const totalKcal: number = meal.total_kcal;
-  // @ts-expect-error
   const totalP: number = meal.total_protein_g;
-  // @ts-expect-error
   const totalC: number = meal.total_carbs_g;
-  // @ts-expect-error
   const totalF: number = meal.total_fat_g;
-  // @ts-expect-error
   const mealUserId: string = meal.user_id;
 
-  // @ts-expect-error supabase types not generated
   const viewerRole = viewerProfile?.role as string | undefined;
   const isCoachOrAdmin = viewerRole === "coach" || viewerRole === "admin";
   const isOwner = mealUserId === user.id;
@@ -190,15 +179,11 @@ export default async function MealDetailPage({
           <CardTitle>Ingrédients</CardTitle>
           <ul className="divide-y divide-[var(--color-border)]">
             {items.map((it) => {
-              // @ts-expect-error
               const name: string = it.food_name;
-              // @ts-expect-error
               const qty: number = it.quantity_g;
-              // @ts-expect-error
               const kcal: number = it.kcal_total;
               return (
                 <li
-                  // @ts-expect-error
                   key={it.id}
                   className="flex items-center justify-between py-2 text-sm"
                 >

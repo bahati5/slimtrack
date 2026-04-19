@@ -15,7 +15,6 @@ export default async function Home() {
     .eq("id", user.id)
     .maybeSingle();
 
-  // @ts-expect-error supabase types not generated
   if (profile?.role === "coach" || profile?.role === "admin") {
     const coachClientId = (await cookies()).get("coach_active_client")?.value;
     if (coachClientId) {

@@ -296,7 +296,7 @@ export function StatsView({
               key={`w-${range}-${granularity}`}>
               <AreaChart
                 data={
-                  granularity === "day" ? denseDailyWeights : weeklyWeights
+                  (granularity === "day" ? denseDailyWeights : weeklyWeights) as Record<string, unknown>[]
                 }>
               <defs>
                 <linearGradient id="weight" x1="0" y1="0" x2="0" y2="1">
@@ -367,7 +367,7 @@ export function StatsView({
             key={`k-${range}-${granularity}`}>
             <ComposedChart
               data={
-                granularity === "day" ? denseDailyLogs : weeklyLogs
+                (granularity === "day" ? denseDailyLogs : weeklyLogs) as Record<string, unknown>[]
               }>
               <CartesianGrid stroke="#3d3d3d" strokeDasharray="3 3" />
               <XAxis

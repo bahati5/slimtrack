@@ -40,8 +40,7 @@ export default function NotificationsPage() {
         .select("coach_id")
         .eq("id", userId!)
         .maybeSingle();
-      // @ts-expect-error supabase types not generated
-      const cid = p?.coach_id as string | null | undefined;
+      const cid = p?.coach_id;
       if (!cid) return null;
       const { data: c } = await supabase
         .from("profiles")

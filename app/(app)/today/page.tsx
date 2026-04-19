@@ -36,12 +36,10 @@ export default async function TodayPage() {
   const serverToday = todayIso(profile?.timezone);
 
   let coachDisplayName: string | null = null;
-  // @ts-expect-error supabase types not generated
   if (profile?.coach_id) {
     const { data: coach } = await supabase
       .from("profiles")
       .select("full_name")
-      // @ts-expect-error supabase types not generated
       .eq("id", profile.coach_id)
       .maybeSingle();
     coachDisplayName = coach?.full_name ?? null;
@@ -55,7 +53,6 @@ export default async function TodayPage() {
     .eq("log_date", serverToday)
     .maybeSingle();
 
-  // @ts-expect-error supabase types not generated
   const dailyId: string | null = dailyRaw?.id ?? null;
 
   const [mealsRes, activitiesRes, mealCommentsRes] = await Promise.all([
