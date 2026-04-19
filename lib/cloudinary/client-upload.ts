@@ -1,14 +1,10 @@
 "use client";
 
-/**
- * Flux d'upload côté client :
- *   1. Demander une signature à /api/upload (authentifié via Supabase cookies).
- *   2. Envoyer le fichier directement à Cloudinary avec la signature.
- *   3. Retourner l'URL sécurisée et le public_id pour stockage en BDD.
- */
+import { compressImage, getCompressPreset } from "@/lib/image/compress";
+
 export interface SignedUploadParams {
   kind: "meal" | "activity" | "avatar" | "progress";
-  date?: string; // YYYY-MM-DD (requis pour meal / activity)
+  date?: string;
 }
 
 export interface CloudinaryUploadResult {
@@ -26,6 +22,13 @@ export async function uploadToCloudinary(
   params: SignedUploadParams,
   onProgress?: (pct: number) => void,
 ): Promise<CloudinaryUploadResult> {
+  onProgress?.(0);
+
+  const compressed = await compressImage(
+    file,
+    getCompressPreset(params.kind),
+  );
+
   const signRes = await fetch("/api/upload", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -36,14 +39,14 @@ export async function uploadToCloudinary(
     await signRes.json();
 
   const form = new FormData();
-  form.append("file", file);
+  form.append("file", compressed);
   form.append("api_key", apiKey);
   form.append("timestamp", String(timestamp));
   form.append("signature", signature);
   form.append("folder", folder);
   if (transformation) form.append("transformation", transformation);
 
-  const isVideo = file.type.startsWith("video/");
+  const isVideo = compressed.type.startsWith("video/");
   const endpoint = `https://api.cloudinary.com/v1_1/${cloudName}/${isVideo ? "video" : "image"}/upload`;
 
   return new Promise<CloudinaryUploadResult>((resolve, reject) => {

@@ -30,6 +30,7 @@ export function MediaUploader({
   className,
 }: MediaUploaderProps) {
   const [uploading, setUploading] = useState(false);
+  const [compressing, setCompressing] = useState(false);
   const [progress, setProgress] = useState(0);
   const toast = useToast();
 
@@ -39,17 +40,28 @@ export function MediaUploader({
       toast.warning(`Max ${max} médias`);
       return;
     }
+    setCompressing(true);
     setUploading(true);
     try {
       const file = files[0];
-      const result = await uploadToCloudinary(file, { kind, date }, (p) =>
-        setProgress(p),
+      let compressionDone = false;
+      const result = await uploadToCloudinary(
+        file,
+        { kind, date },
+        (p) => {
+          if (!compressionDone) {
+            compressionDone = true;
+            setCompressing(false);
+          }
+          setProgress(p);
+        },
       );
       onChange([...value, result.secure_url]);
     } catch (err) {
       console.error(err);
       toast.error("Upload impossible");
     } finally {
+      setCompressing(false);
       setUploading(false);
       setProgress(0);
     }
@@ -76,7 +88,12 @@ export function MediaUploader({
         ))}
         {value.length < max && (
           <label className="relative flex size-20 cursor-pointer flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-[var(--color-border)] bg-[var(--color-card-soft)] text-xs text-[var(--color-muted)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary-soft)]">
-            {uploading ? (
+            {compressing ? (
+              <>
+                <Loader2 className="size-5 animate-spin" />
+                <span className="text-[10px]">Compression…</span>
+              </>
+            ) : uploading ? (
               <>
                 <Loader2 className="size-5 animate-spin" />
                 <span>{progress}%</span>
